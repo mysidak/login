@@ -134,7 +134,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_8SOrlhZ__osfT14ZKPmJtg_vy20APAW';
 const LOGO_URL          = 'https://res.cloudinary.com/q7sznixw/image/upload/v1791355406/Logo_SIDAK_Data_Konstituen_i9hub5.webp';
 const HEADER_IMG_URL    = 'https://res.cloudinary.com/q7sznixw/image/upload/v1790743670/SP_11zon_edea6t.webp';
 /* ================================================= */
-  
+
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -147,9 +147,9 @@ document.querySelectorAll('.js-logo').forEach(i => i.src = LOGO_URL);
 /* ---------- Header + jam ---------- */
 function headerHTML() {
   return `<header class="hdr relative overflow-hidden text-white">
-    <img src="${HEADER_IMG_URL}" alt="" class="absolute right-0 top-0 h-full w-auto max-w-[60%] object-contain object-right opacity-40 pointer-events-none"
+    <img src="${HEADER_IMG_URL}" alt="" class="absolute right-0 top-0 h-full w-auto max-w-[55%] object-contain object-right opacity-90 pointer-events-none"
          style="-webkit-mask-image:linear-gradient(to left,#000 40%,transparent);mask-image:linear-gradient(to left,#000 40%,transparent)">
-    <div class="relative max-w-5xl mx-auto px-4 py-4 flex flex-col items-end text-right gap-1">
+    <div class="relative max-w-5xl mx-auto px-4 py-4 flex flex-col items-start text-left gap-1">
       <img src="${LOGO_URL}" alt="SIDAK" class="h-12 object-contain">
       <p class="font-bold text-sm sm:text-base leading-tight">Sistem Informasi Data Konstituen</p>
       <p class="js-date text-xs sm:text-sm text-blue-100"></p>
@@ -347,21 +347,30 @@ function viewModal(title, inner, actions = '') {
   m.classList.remove('hidden'); m.classList.add('flex');
   $('mx').onclick = closeForm;
 }
-function tabelData(rows) {
+function tabelData(rows, aksi) {
   if (!rows.length) return '<p class="text-slate-500 text-sm">Belum ada data.</p>';
   return `<table class="w-full text-sm whitespace-nowrap"><thead class="text-left text-slate-500"><tr>
     <th class="py-2 pr-3">Nama</th><th class="pr-3">NIK</th><th class="pr-3">JK</th><th class="pr-3">Hubungan</th>
-    <th class="pr-3">Potensi</th><th class="pr-3">Kelurahan</th><th class="pr-3">Kecamatan</th><th class="pr-3">TPS</th><th>Ket.</th></tr></thead><tbody>
+    <th class="pr-3">Potensi</th><th class="pr-3">Kelurahan</th><th class="pr-3">Kecamatan</th><th class="pr-3">TPS</th><th>Ket.</th>${aksi ? '<th class="pl-3">Aksi</th>' : ''}</tr></thead><tbody>
     ${rows.map(d => `<tr class="border-t"><td class="py-2 pr-3">${esc(d.nama)}</td><td class="pr-3">${esc(d.nik)}</td>
       <td class="pr-3">${d.jenis_kelamin || ''}</td><td class="pr-3">${esc(d.hubungan || (d.is_diri ? 'Data diri' : '-'))}</td>
       <td class="pr-3">${esc(d.potensi)}</td><td class="pr-3">${esc(d.kelurahan)}</td><td class="pr-3">${esc(d.kecamatan)}</td>
-      <td class="pr-3">${esc(d.no_tps || '')}</td><td class="text-red-600">${d.ganda ? 'Ganda' : ''}</td></tr>`).join('')}
+      <td class="pr-3">${esc(d.no_tps || '')}</td><td class="text-red-600">${d.ganda ? 'Ganda' : ''}</td>${aksi ? `<td class="pl-3">${d.is_diri ? '<span class="text-slate-400">-</span>' : `<button class="text-red-600 font-semibold" onclick="hapusData('${d.id}','${d.pendata_id}')">Hapus</button>`}</td>` : ''}</tr>`).join('')}
     </tbody></table>`;
 }
 function lihatPendata(id) {
   const p = PEND.find(x => x.id === id) || {}, rows = ADATA.filter(d => d.pendata_id === id);
-  viewModal('Data dari ' + (p.nama || p.no_hp || 'pendata') + ' (' + rows.length + ')', tabelData(rows),
+  viewModal('Data dari ' + (p.nama || p.no_hp || 'pendata') + ' (' + rows.length + ')', tabelData(rows, true),
     `<button class="btn btn-b" onclick="cetakPendata('${id}')"><i class="fa-solid fa-print mr-1"></i>Cetak</button>`);
+}
+async function hapusData(id, pendataId) {
+  const d = ADATA.find(x => x.id === id);
+  if (!confirm('Hapus data "' + (d ? d.nama : '') + '"? Tindakan ini tidak bisa dibatalkan.')) return;
+  try {
+    await rpc('admin_data_hapus', { p_pass: S.pass, p_id: id });
+    await loadAdmin(true);
+    lihatPendata(pendataId);   // tampilkan ulang daftar yang sudah diperbarui
+  } catch (e) { alert('Gagal menghapus: ' + e.message); }
 }
 function cetakPendata(id) {
   const p = PEND.find(x => x.id === id) || {};
