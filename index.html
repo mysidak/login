@@ -47,6 +47,7 @@
 <!-- A. SPLASH -->
 <div id="splash" class="fixed inset-0 z-50 abstrak transition-transform duration-700 ease-in-out">
   <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+    <p class="absolute bottom-full left-1/2 -translate-x-1/2 mb-6 whitespace-nowrap text-2xl font-extrabold text-slate-700">Selamat Datang</p>
     <img class="js-logo w-50 h-50 object-contain" alt="https://res.cloudinary.com/q7sznixw/image/upload/v1791355406/Logo_SIDAK_Data_Konstituen_i9hub5.webp">
   </div>
   <p class="absolute bottom-4 w-full text-center text-xs text-slate-500">Powered by Anto Design Concept &copy; 2026</p>
@@ -83,10 +84,10 @@
     <p id="cardFilter" class="text-xs text-slate-500 -mt-2"></p>
 
     <div class="bg-white rounded-2xl shadow p-4">
-      <div class="flex items-center justify-between mb-3">
-        <h2 class="font-bold"><i class="fa-solid fa-print text-blue-700 mr-2"></i>Cetak Data</h2>
-        <button class="w-8 h-8 rounded-full hover:bg-slate-100 text-slate-500" onclick="toggleSeksi('bodyCetak',this)" aria-expanded="true" aria-label="Ciutkan atau buka Cetak Data"><i class="fa-solid fa-chevron-up transition-transform"></i></button>
-      </div>
+      <button type="button" data-toggle="bodyCetak" class="w-full flex items-center justify-between text-left mb-3" onclick="toggleSeksi('bodyCetak',this)" aria-expanded="true">
+        <span class="font-bold"><i class="fa-solid fa-print text-blue-700 mr-2"></i>Cetak Data</span>
+        <i data-chev="bodyCetak" class="fa-solid fa-chevron-up text-slate-500 transition-transform"></i>
+      </button>
       <div id="bodyCetak"><div class="grid sm:grid-cols-3 gap-2">
         <select id="by" class="inp" onchange="fillVal()">
           <option value="">Semua data</option><option value="pendata_nama">Pendata</option>
@@ -106,18 +107,14 @@
 
     <div class="bg-white rounded-2xl shadow p-4">
       <h2 class="font-bold mb-3"><i class="fa-solid fa-users-gear text-blue-700 mr-2"></i>Kelola Pendata</h2>
-      <div class="grid sm:grid-cols-3 gap-2 mb-3">
-        <input id="nhp" class="inp" type="tel" placeholder="No. telepon pendata">
-        <input id="nnama" class="inp" placeholder="Nama (opsional)">
-        <button class="btn" onclick="tambahPendata()"><i class="fa-solid fa-plus mr-1"></i>Tambah pendata</button>
-      </div>
-      <div class="relative mb-3">
+      <button class="btn" onclick="formPendata()"><i class="fa-solid fa-plus mr-1"></i>Tambah Pendata</button>
+      <div class="relative my-3">
         <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-        <input id="cariPendata" class="inp pl-9" placeholder="Cari pendata (nama atau nomor telepon)" oninput="PLIMIT=20;renderPendata()"></div>
-      <div class="tbl-wrap"><table class="tbl">
-        <thead><tr><th>No</th><th>No. HP</th><th>Nama</th><th>Data</th><th>Status</th><th>Aksi</th></tr></thead>
+        <input id="cariPendata" class="inp pl-9" placeholder="Cari pendata (nama atau nomor telepon)" oninput="renderPendata()"></div>
+      <div class="tbl-wrap"><table class="tbl whitespace-nowrap">
+        <thead><tr><th>No</th><th>No. HP</th><th>Nama</th><th>Status</th><th>Data</th><th>Ganda</th><th>Bersih</th><th>Aksi</th></tr></thead>
         <tbody id="pendataBody"></tbody></table></div>
-      <div id="pendataMore" class="text-center mt-3"></div>
+      
     </div>
   </main>
 </section>
@@ -127,26 +124,12 @@
   <div class="js-header"></div>
   <main class="max-w-3xl mx-auto p-4 space-y-5">
     <div class="bg-white rounded-2xl shadow p-4">
-      <div class="flex items-center justify-between mb-3">
-        <h2 class="font-bold"><i class="fa-solid fa-id-card text-blue-700 mr-2"></i>Data Diri</h2>
-        <div class="flex items-center gap-3">
-          <button class="text-sm text-blue-700 font-semibold" onclick="ubahDiri()">Ubah</button>
-          <button class="w-8 h-8 rounded-full hover:bg-slate-100 text-slate-500" onclick="toggleSeksi('bodyDiri',this)" aria-expanded="true" aria-label="Ciutkan atau buka Data Diri"><i class="fa-solid fa-chevron-up transition-transform"></i></button>
-        </div>
+      <div class="flex items-center gap-2 mb-3">
+        <button type="button" data-toggle="bodyDiri" class="flex-1 text-left font-bold" onclick="toggleSeksi('bodyDiri',this)" aria-expanded="true"><i class="fa-solid fa-id-card text-blue-700 mr-2"></i>Data Diri</button>
+        <button class="text-sm text-blue-700 font-semibold" onclick="ubahDiri()">Ubah</button>
+        <button type="button" data-toggle="bodyDiri" class="w-8 h-8 rounded-full hover:bg-slate-100 text-slate-500" onclick="toggleSeksi('bodyDiri',this)" aria-expanded="true" aria-label="Ciutkan atau buka Data Diri"><i data-chev="bodyDiri" class="fa-solid fa-chevron-up transition-transform"></i></button>
       </div>
       <div id="bodyDiri"><dl id="diri" class="grid grid-cols-3 gap-y-2 text-sm"></dl></div>
-    </div>
-
-    <div class="bg-white rounded-2xl shadow p-4">
-      <h2 class="font-bold mb-3"><i class="fa-solid fa-user-plus text-blue-700 mr-2"></i>Pendataan</h2>
-      <button class="btn w-full" onclick="formData()">Tambah data konstituen</button>
-      <div class="relative mt-3">
-        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-        <input id="cariData" class="inp pl-9" placeholder="Cari data (nama, NIK, kelurahan, hubungan)" oninput="ULIMIT=20;renderUser()"></div>
-      <div class="tbl-wrap mt-3"><table class="tbl">
-        <thead><tr><th>No</th><th>Nama</th><th>NIK</th><th>Hubungan</th><th>Kelurahan</th><th>Aksi</th></tr></thead>
-        <tbody id="dataBody"></tbody></table></div>
-      <div id="dataMore" class="text-center mt-3"></div>
     </div>
 
     <div class="bg-white rounded-2xl shadow p-4">
@@ -154,6 +137,19 @@
       <div id="sum" class="grid grid-cols-3 gap-3 text-center"></div>
       <p class="text-xs text-slate-500 mt-2">Data ganda hanya bisa dilihat. Penanganannya oleh admin.</p>
     </div>
+
+    <div class="bg-white rounded-2xl shadow p-4">
+      <h2 class="font-bold mb-3"><i class="fa-solid fa-user-plus text-blue-700 mr-2"></i>Pendataan</h2>
+      <button class="btn w-full" onclick="formData()">Tambah data konstituen</button>
+      <div class="relative mt-3">
+        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+        <input id="cariData" class="inp pl-9" placeholder="Cari data (nama, NIK, kelurahan, hubungan)" oninput="renderUser()"></div>
+      <div class="tbl-wrap mt-3"><table class="tbl whitespace-nowrap">
+        <thead><tr><th>No</th><th>Nama</th><th>NIK</th><th>Hubungan</th><th>Kecamatan</th><th>Kelurahan</th><th>TPS</th><th>Aksi</th></tr></thead>
+        <tbody id="dataBody"></tbody></table></div>
+    </div>
+
+    
 
     <div class="bg-white rounded-2xl shadow p-4">
       <h2 class="font-bold mb-3"><i class="fa-solid fa-print text-blue-700 mr-2"></i>Cetak Data</h2>
@@ -192,11 +188,11 @@ function headerHTML() {
     <img src="${HEADER_IMG_URL}" alt="" class="absolute right-0 top-0 h-full w-auto max-w-[55%] object-contain object-right opacity-90 pointer-events-none"
          style="-webkit-mask-image:linear-gradient(to left,#000 40%,transparent);mask-image:linear-gradient(to left,#000 40%,transparent)">
     <div class="relative max-w-5xl mx-auto px-4 py-4 flex flex-col items-start text-left gap-1">
-      <img src="${LOGO_URL}" alt="SIDAK" class="h-12 object-contain">
+      <span class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white shadow-md p-2"><img src="${LOGO_URL}" alt="SIDAK" class="max-w-full max-h-full object-contain"></span>
       <p class="font-bold text-sm sm:text-base leading-tight">Sistem Informasi Data Konstituen</p>
       <p class="js-date text-xs sm:text-sm text-blue-100"></p>
       <p class="js-time text-xl sm:text-2xl font-extrabold tabular-nums"></p>
-      <button onclick="keluar()" class="mt-1 text-xs bg-white/15 hover:bg-white/25 rounded-full px-3 py-1"><i class="fa-solid fa-right-from-bracket mr-1"></i>Keluar</button>
+      <button onclick="keluar()" class="mt-1 text-sm text-white bg-red-600/75 hover:bg-red-600/90 rounded-full px-4 py-1.5 font-semibold"><i class="fa-solid fa-right-from-bracket mr-1"></i>Keluar</button>
     </div></header>`;
 }
 document.querySelectorAll('.js-header').forEach(h => h.innerHTML = headerHTML());
@@ -268,9 +264,10 @@ async function masuk() {
 const FIELDS = {
   nama:['Nama','text'], nik:['NIK (16 digit)','nik'], jenis_kelamin:['Jenis kelamin','jk'],
   no_hp:['No. HP','hp'], alamat:['Alamat','area'], kelurahan:['Kelurahan','kel'],
-  kecamatan:['Kecamatan','kec'], no_tps:['No. TPS (opsional)','num'], hubungan:['Hubungan dengan Pendata','hub']
+  kecamatan:['Kecamatan','kec'], no_tps:['No. TPS (opsional)','num'], hubungan:['Hubungan dengan Pendata','hub'],
+  pend_hp:['No. telepon pendata','hp'], pend_nama:['Nama pendata (opsional)','text']
 };
-const OPTIONAL = ['no_hp','no_tps'];
+const OPTIONAL = ['no_hp','no_tps','pend_nama'];
 const WILAYAH = {
   'Kadia': ['Anaiwoi','Bende','Kadia','Pondambea','Wowawanggu'],
   'Wua Wua': ['Anawai','Bonggoeya','Mataiwoi','Wua Wua']
@@ -363,8 +360,9 @@ function toggleEye(id, btn) {
 function toggleSeksi(id, btn) {
   const el = $(id), ciut = !el.classList.contains('hidden');
   el.classList.toggle('hidden', ciut);
-  btn.querySelector('i').style.transform = ciut ? 'rotate(180deg)' : '';
-  btn.setAttribute('aria-expanded', String(!ciut));
+  const ic = document.querySelector('[data-chev="' + id + '"]');
+  if (ic) ic.style.transform = ciut ? 'rotate(180deg)' : '';
+  document.querySelectorAll('[data-toggle="' + id + '"]').forEach(b => b.setAttribute('aria-expanded', String(!ciut)));
 }
 function waLink(hp) {
   let d = String(hp || '').replace(/\D/g, '');
@@ -414,7 +412,6 @@ function toast(t) {
   e.textContent = t; document.body.appendChild(e); setTimeout(() => e.remove(), 2500);
 }
 const POTC = { Tinggi:'bg-green-100 text-green-700', Sedang:'bg-amber-100 text-amber-700', Rendah:'bg-slate-200 text-slate-600' };
-let PLIMIT = 20, ULIMIT = 20;
 
 /* ---------- ADMIN ---------- */
 const CARDS = [
@@ -517,27 +514,42 @@ async function loadPendata() {
 function renderPendata() {
   const q = ($('cariPendata').value || '').toLowerCase().trim();
   const list = PEND.filter(p => !q || (p.nama || '').toLowerCase().includes(q) || (p.no_hp || '').includes(q));
-  const rows = list.slice(0, PLIMIT);
-  $('pendataBody').innerHTML = rows.map((p, i) => `<tr>
-    <td>${i + 1}</td><td class="whitespace-nowrap"><a href="${waLink(p.no_hp)}" target="_blank" rel="noopener" class="text-green-700 font-semibold hover:underline" title="Chat WhatsApp"><i class="fa-brands fa-whatsapp mr-1"></i>${esc(p.no_hp)}</a></td><td>${esc(p.nama || '-')}</td><td>${p.jumlah}</td>
+  // Data / Ganda / Bersih per pendata (tidak termasuk data diri pendata)
+  const st = {};
+  ADATA.forEach(d => {
+    if (d.is_diri) return;
+    const a = st[d.pendata_id] = st[d.pendata_id] || { data: 0, ganda: 0, bersih: 0 };
+    a.data++; if (d.ganda) a.ganda++; if (!d.merah) a.bersih++;
+  });
+  $('pendataBody').innerHTML = list.map((p, i) => {
+    const a = st[p.id] || { data: 0, ganda: 0, bersih: 0 };
+    return `<tr>
+    <td>${i + 1}</td>
+    <td><a href="${waLink(p.no_hp)}" target="_blank" rel="noopener" class="text-green-700 font-semibold hover:underline" title="Chat WhatsApp"><i class="fa-brands fa-whatsapp mr-1"></i>${esc(p.no_hp)}</a></td>
+    <td>${esc(p.nama || '-')}</td>
     <td>${p.sudah_registrasi
       ? '<span class="rounded-full bg-green-100 text-green-700 text-xs font-semibold px-2.5 py-1">Aktif</span>'
-      : '<span class="rounded-full bg-amber-100 text-amber-700 text-xs font-semibold px-2.5 py-1 whitespace-nowrap">Belum registrasi</span>'}</td>
-    <td class="whitespace-nowrap">
+      : '<span class="rounded-full bg-amber-100 text-amber-700 text-xs font-semibold px-2.5 py-1">Belum registrasi</span>'}</td>
+    <td>${a.data}</td>
+    <td class="${a.ganda ? 'text-red-600 font-bold' : ''}">${a.ganda}</td>
+    <td class="text-green-700 font-semibold">${a.bersih}</td>
+    <td>
       <button class="ba ba-g" onclick="lihatPendata('${p.id}')">Lihat</button>
       <button class="ba ba-y" onclick="resetPw('${p.id}')">Reset PIN</button>
-      <button class="ba ba-r" onclick="hapusPendata('${p.id}')">Hapus</button></td></tr>`).join('')
-    || `<tr><td colspan="6" class="text-slate-500">${q ? 'Tidak ada pendata yang cocok dengan pencarian.' : 'Belum ada pendata. Tambahkan nomor telepon di atas.'}</td></tr>`;
-  $('pendataMore').innerHTML = list.length
-    ? `<p class="text-xs text-slate-500 mb-2">Menampilkan ${rows.length} dari ${list.length} pendata</p>` +
-      (list.length > PLIMIT ? '<button class="btn btn-b" onclick="PLIMIT+=20;renderPendata()"><i class="fa-solid fa-plus mr-1"></i>Tambah 20 baris</button>' : '')
-    : '';
+      <button class="ba ba-r" onclick="hapusPendata('${p.id}')">Hapus</button></td></tr>`;
+  }).join('')
+    || `<tr><td colspan="8" class="text-slate-500">${q ? 'Tidak ada pendata yang cocok dengan pencarian.' : 'Belum ada pendata. Tekan Tambah Pendata untuk mendaftarkan nomor telepon.'}</td></tr>`;
 }
-async function tambahPendata() {
-  try {
-    await rpc('admin_pendata_tambah', { p_pass: S.pass, p_hp: $('nhp').value, p_nama: $('nnama').value });
-    $('nhp').value = ''; $('nnama').value = ''; await loadPendata(); toast('Pendata ditambahkan');
-  } catch (e) { notif(e.message, 'Gagal menambah pendata'); }
+function formPendata() {
+  const norm = d => { d = String(d || '').replace(/\D/g, ''); return d.startsWith('62') ? '0' + d.slice(2) : d.startsWith('8') ? '0' + d : d; };
+  openForm({
+    title: 'Tambah Pendata', keys: ['pend_hp', 'pend_nama'],
+    onSave: async o => {
+      if (PEND.some(x => x.no_hp === norm(o.pend_hp))) throw new Error('Nomor ini sudah terdaftar sebagai pendata.');
+      await rpc('admin_pendata_tambah', { p_pass: S.pass, p_hp: o.pend_hp, p_nama: o.pend_nama || '' });
+      await loadPendata(); toast('Pendata ditambahkan');
+    }
+  });
 }
 async function resetPw(id) {
   const p = PEND.find(x => x.id === id) || {};
@@ -676,18 +688,13 @@ async function loadUser() {
 }
 function renderUser() {
   const q = ($('cariData').value || '').toLowerCase().trim();
-  const list = UDATA.filter(d => !q || [d.nama, d.nik, d.kelurahan, d.kecamatan, d.hubungan].some(v => (v || '').toLowerCase().includes(q)));
-  const rows = list.slice(0, ULIMIT);
-  $('dataBody').innerHTML = rows.map((d, i) => `<tr>
+  const list = UDATA.filter(d => !q || [d.nama, d.nik, d.kelurahan, d.kecamatan, d.hubungan, d.no_tps].some(v => (v || '').toLowerCase().includes(q)));
+  $('dataBody').innerHTML = list.map((d, i) => `<tr>
     <td>${i + 1}</td>
     <td class="font-semibold">${esc(d.nama)}${d.ganda ? ' <span class="ml-1 rounded-full bg-red-100 text-red-600 text-xs font-semibold px-2 py-0.5">Ganda</span>' : ''}</td>
-    <td>${esc(d.nik)}</td><td class="whitespace-nowrap">${esc(d.hubungan || '-')}</td><td>${esc(d.kelurahan)}</td>
+    <td>${esc(d.nik)}</td><td>${esc(d.hubungan || '-')}</td><td>${esc(d.kecamatan)}</td><td>${esc(d.kelurahan)}</td><td>${esc(d.no_tps || '-')}</td>
     <td><button class="ba ba-b" onclick="formData(${UDATA.indexOf(d)})">Ubah</button></td></tr>`).join('')
-    || `<tr><td colspan="6" class="text-slate-500">${q ? 'Tidak ada data yang cocok dengan pencarian.' : 'Belum ada data. Tekan tombol di atas untuk mulai mendata.'}</td></tr>`;
-  $('dataMore').innerHTML = list.length
-    ? `<p class="text-xs text-slate-500 mb-2">Menampilkan ${rows.length} dari ${list.length} data</p>` +
-      (list.length > ULIMIT ? '<button class="btn btn-b" onclick="ULIMIT+=20;renderUser()"><i class="fa-solid fa-plus mr-1"></i>Tambah 20 baris</button>' : '')
-    : '';
+    || `<tr><td colspan="8" class="text-slate-500">${q ? 'Tidak ada data yang cocok dengan pencarian.' : 'Belum ada data. Tekan tombol di atas untuk mulai mendata.'}</td></tr>`;
 }
 function ubahDiri(closable = true) {
   openForm({
