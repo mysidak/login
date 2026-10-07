@@ -86,13 +86,18 @@
       <div id="bodyCetak"><div class="grid sm:grid-cols-3 gap-2">
         <select id="by" class="inp" onchange="fillVal()">
           <option value="">Semua data</option><option value="pendata_nama">Pendata</option>
-          <option value="no_tps">TPS</option><option value="kelurahan">Kelurahan</option>
-          <option value="kecamatan">Kecamatan</option><option value="potensi">Potensi</option>
+          <option value="tps">TPS &amp; Wilayah</option><option value="potensi">Potensi</option>
           <option value="ganda">Data ganda</option>
         </select>
-        <select id="val" class="inp"></select>
+        <select id="val" class="inp" onchange="infoCetak()"></select>
         <button class="btn btn-b" onclick="cetakAdmin()"><i class="fa-solid fa-print mr-1"></i>Cetak</button>
-      </div></div>
+      </div>
+      <div id="wil" class="hidden grid sm:grid-cols-3 gap-2 mt-2">
+        <select id="wKec" class="inp" onchange="fillWil('kec')" aria-label="Kecamatan"></select>
+        <select id="wKel" class="inp" onchange="fillWil('kel')" aria-label="Kelurahan"></select>
+        <select id="wTps" class="inp" onchange="fillWil('tps')" aria-label="TPS"></select>
+      </div>
+      <p id="cetakInfo" class="text-xs text-slate-500 mt-2"></p></div>
     </div>
 
     <div class="bg-white rounded-2xl shadow p-4">
@@ -396,19 +401,49 @@ async function loadAdmin(silent) {
   } catch (e) { if (!silent) notif('Gagal memuat data: ' + e.message); }
 }
 function fillVal() {
-  const by = $('by').value, sel = $('val');
-  if (!by) { sel.innerHTML = '<option value="">-</option>'; sel.disabled = true; return; }
+  const by = $('by').value, sel = $('val'), tps = by === 'tps';
+  $('wil').classList.toggle('hidden', !tps);
+  sel.classList.toggle('hidden', tps);
+  if (tps) { fillWil('kec'); return; }
+  if (!by) { sel.innerHTML = '<option value="">-</option>'; sel.disabled = true; infoCetak(); return; }
   sel.disabled = false;
-  const vals = by === 'ganda' ? ['Ganda'] : [...new Set(ADATA.map(d => d[by]).filter(v => v))].sort();
+  const vals = by === 'ganda' ? ['Ganda'] : uniq(ADATA.map(d => d[by]));
   const cur = sel.value;
   sel.innerHTML = vals.map(v => `<option>${esc(v)}</option>`).join('') || '<option value="">(kosong)</option>';
   if (vals.includes(cur)) sel.value = cur;
+  infoCetak();
 }
+const uniq = a => [...new Set(a.filter(Boolean))].sort((x, y) => String(x).localeCompare(String(y), 'id', { numeric: true }));
+// Pilihan bertingkat: Kecamatan -> Kelurahan -> TPS (nomor TPS bisa sama di kelurahan berbeda)
+function fillWil(dari) {
+  const opt = (arr, semua) => `<option value="">${semua}</option>` + arr.map(v => `<option>${esc(v)}</option>`).join('');
+  const isi = (el, html) => { const c = el.value; el.innerHTML = html; if ([...el.options].some(o => o.value === c)) el.value = c; };
+  if (dari === 'kec') isi($('wKec'), opt(uniq(ADATA.map(d => d.kecamatan)), 'Semua kecamatan'));
+  const kec = $('wKec').value;
+  if (dari === 'kec' || dari === 'kel') {
+    isi($('wKel'), opt(uniq(ADATA.filter(d => !kec || d.kecamatan === kec).map(d => d.kelurahan)), 'Semua kelurahan'));
+  }
+  if (dari !== 'tps') {
+    const kel = $('wKel').value;
+    isi($('wTps'), opt(uniq(ADATA.filter(d => (!kec || d.kecamatan === kec) && (!kel || d.kelurahan === kel)).map(d => d.no_tps)), 'Semua TPS'));
+  }
+  infoCetak();
+}
+function dataCetak() {
+  const by = $('by').value;
+  if (by === 'ganda') return { rows: ADATA.filter(d => d.ganda), judul: 'Data Ganda' };
+  if (by === 'tps') {
+    const kec = $('wKec').value, kel = $('wKel').value, tps = $('wTps').value;
+    const rows = ADATA.filter(d => (!kec || d.kecamatan === kec) && (!kel || d.kelurahan === kel) && (!tps || d.no_tps === tps));
+    const bag = [kec && 'Kec. ' + kec, kel && 'Kel. ' + kel, tps && 'TPS ' + tps].filter(Boolean);
+    return { rows, judul: bag.length ? bag.join(' / ') : 'Semua Wilayah' };
+  }
+  if (by) { const v = $('val').value; return { rows: ADATA.filter(d => d[by] === v), judul: $('by').selectedOptions[0].text + ': ' + v }; }
+  return { rows: ADATA, judul: 'Semua Data' };
+}
+function infoCetak() { $('cetakInfo').textContent = dataCetak().rows.length + ' data akan dicetak'; }
 function cetakAdmin() {
-  const by = $('by').value, v = $('val').value;
-  let rows = ADATA, judul = 'Semua Data';
-  if (by === 'ganda') { rows = ADATA.filter(d => d.ganda); judul = 'Data Ganda'; }
-  else if (by) { rows = ADATA.filter(d => d[by] === v); judul = $('by').selectedOptions[0].text + ': ' + v; }
+  const { rows, judul } = dataCetak();
   printRows('Laporan Data Konstituen - ' + judul, rows, true);
 }
 async function loadPendata() {
