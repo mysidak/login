@@ -42,6 +42,9 @@
   .tbl-t tbody tr:hover td{background:transparent}
   .tbl-t .ba{display:block;text-align:center}
   .tbl-t .ba+.ba{margin-left:0}
+  .nav-btn{width:2.25rem;height:2.25rem;border-radius:.5rem;border:1px solid #cbd5e1;background:#fff;color:#334155}
+  .nav-btn:hover:not(:disabled){background:#f1f5f9}
+  .nav-btn:disabled{opacity:.4;cursor:not-allowed}
 </style>
 </head>
 <body class="bg-slate-100 min-h-screen">
@@ -50,7 +53,7 @@
 <div id="splash" class="fixed inset-0 z-50 abstrak transition-transform duration-700 ease-in-out">
   <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
     <p class="absolute bottom-full left-1/2 -translate-x-1/2 mb-6 whitespace-nowrap text-2xl font-extrabold text-slate-700">Selamat Datang</p>
-    <img class="js-logo w-45 h-45 object-contain" alt="https://res.cloudinary.com/q7sznixw/image/upload/v1791355406/Logo_SIDAK_Data_Konstituen_i9hub5.webp">
+    <img class="js-logo w-40 h-40 object-contain" alt="https://res.cloudinary.com/q7sznixw/image/upload/v1791355406/Logo_SIDAK_Data_Konstituen_i9hub5.webp">
   </div>
   <p class="absolute bottom-4 w-full text-center text-xs text-slate-500">Powered by Anto Design Concept &copy; 2026</p>
 </div>
@@ -113,7 +116,8 @@
       <div class="relative my-3">
         <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
         <input id="cariPendata" class="inp pl-9" placeholder="Cari pendata (nama atau nomor telepon)" oninput="renderPendata()"></div>
-      <div class="tbl-wrap"><table class="tbl tbl-t whitespace-nowrap">
+      <div id="navPendata"></div>
+      <div id="wrapPendata" class="tbl-wrap"><table class="tbl tbl-t whitespace-nowrap">
         <tbody id="pendataBody"></tbody></table></div>
       
     </div>
@@ -145,7 +149,8 @@
       <div class="relative mt-3">
         <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
         <input id="cariData" class="inp pl-9" placeholder="Cari data (nama, NIK, kelurahan, hubungan)" oninput="renderUser()"></div>
-      <div class="tbl-wrap mt-3"><table class="tbl tbl-t whitespace-nowrap">
+      <div id="navData" class="mt-3"></div>
+      <div id="wrapData" class="tbl-wrap"><table class="tbl tbl-t whitespace-nowrap">
         <tbody id="dataBody"></tbody></table></div>
     </div>
 
@@ -377,6 +382,33 @@ document.addEventListener('keydown', e => {
   e.preventDefault(); masuk();
 });
 
+/* ---------- Navigasi tabel melintang ---------- */
+function navBar(id) {
+  const b = (a, ic, t) => `<button type="button" class="nav-btn" data-nav="${id}" data-aksi="${a}" onclick="geser('${id}','${a}')" title="${t}" aria-label="${t}"><i class="fa-solid ${ic}"></i></button>`;
+  return `<div class="flex justify-end gap-1.5 mb-2">${b('awal','fa-angles-left','Ke awal')}${b('kiri','fa-angle-left','Geser ke kiri')}${b('kanan','fa-angle-right','Geser ke kanan')}${b('akhir','fa-angles-right','Ke paling akhir')}</div>`;
+}
+function geser(id, aksi) {
+  const w = $(id); if (!w) return;
+  const langkah = Math.max(160, w.clientWidth * 0.7);
+  const x = aksi === 'awal' ? 0 : aksi === 'akhir' ? w.scrollWidth : aksi === 'kiri' ? w.scrollLeft - langkah : w.scrollLeft + langkah;
+  w.scrollTo({ left: x, behavior: 'smooth' });
+}
+function updNav(id) {
+  const w = $(id); if (!w) return;
+  const maks = w.scrollWidth - w.clientWidth - 1, x = w.scrollLeft;
+  document.querySelectorAll('[data-nav="' + id + '"]').forEach(b => {
+    const mundur = b.dataset.aksi === 'awal' || b.dataset.aksi === 'kiri';
+    b.disabled = maks <= 0 || (mundur ? x <= 0 : x >= maks);
+  });
+}
+function pasangNav(id) { const w = $(id); if (w) { w.addEventListener('scroll', () => updNav(id)); updNav(id); } }
+[['Pendata', 'pendataBody'], ['Data', 'dataBody']].forEach(([n, body]) => {
+  $('nav' + n).innerHTML = navBar('wrap' + n);
+  pasangNav('wrap' + n);
+  new MutationObserver(() => updNav('wrap' + n)).observe($(body), { childList: true });
+  window.addEventListener('resize', () => updNav('wrap' + n));
+});
+
 /* ---------- Dialog & toast buatan sendiri ---------- */
 const DLG = {
   bahaya:['bg-red-100 text-red-600','fa-trash-can','bg-red-600 hover:bg-red-700'],
@@ -575,11 +607,11 @@ async function hapusPendata(id) {
 
 /* ---------- Lihat Data (admin, mengikuti filter Cetak Data) ---------- */
 function lihatAdmin() {
-  viewModal('Lihat Data', `<div class="flex flex-wrap gap-2 text-xs mb-3">
-    <div id="lihatBody"></div>`);
+  viewModal('Lihat Data', `<div id="lihatBody"></div>`);
   renderLihat();
 }
 function renderLihat() {
+  const lama = $('wrapLihat'), x0 = lama ? lama.scrollLeft : 0;   // pertahankan posisi geser saat data diperbarui
   const { rows, judul } = dataCetak();
   const urut = [...rows].sort((a, b) => {
     if (a.ganda !== b.ganda) return a.ganda ? -1 : 1;                    // data ganda di depan, dikelompokkan per NIK
@@ -603,9 +635,10 @@ function renderLihat() {
       ? `<button class="ba ${d.unggul ? 'ba-o' : 'ba-r'}" onclick="hapusGanda('${d.id}')">Hapus</button>`
       : '<span class="text-slate-400">-</span>']
   ];
-  $('lihatBody').innerHTML = head + `<div class="tbl-wrap"><table class="tbl tbl-t whitespace-nowrap"><tbody>
+  $('lihatBody').innerHTML = head + navBar('wrapLihat') + `<div id="wrapLihat" class="tbl-wrap"><table class="tbl tbl-t whitespace-nowrap"><tbody>
     ${baris.map(([lb, f]) => `<tr><th>${lb}</th>${urut.map((d, i) => `<td>${f(d, i)}</td>`).join('')}</tr>`).join('')}
     </tbody></table></div>`;
+  pasangNav('wrapLihat'); $('wrapLihat').scrollLeft = x0;
 }
 async function hapusGanda(id) {
   const d = ADATA.find(x => x.id === id); if (!d) return;
