@@ -52,8 +52,7 @@
 <!-- A. SPLASH -->
 <div id="splash" class="fixed inset-0 z-50 abstrak transition-transform duration-700 ease-in-out">
   <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-    <p class="absolute bottom-full left-1/2 -translate-x-1/2 mb-6 whitespace-nowrap text-2xl font-extrabold text-slate-700">Selamat Datang</p>
-    <img class="js-logo w-40 h-40 object-contain" alt="https://res.cloudinary.com/q7sznixw/image/upload/v1791355406/Logo_SIDAK_Data_Konstituen_i9hub5.webp">
+<img class="js-logo w-[11.25rem] h-[11.25rem] object-contain" alt="https://res.cloudinary.com/q7sznixw/image/upload/v1791355406/Logo_SIDAK_Data_Konstituen_i9hub5.webp">
   </div>
   <p class="absolute bottom-4 w-full text-center text-xs text-slate-500">Powered by Anto Design Concept &copy; 2026</p>
 </div>
@@ -89,11 +88,11 @@
     <p id="cardFilter" class="text-xs text-slate-500 -mt-2"></p>
 
     <div class="bg-white rounded-2xl shadow p-4">
-      <button type="button" data-toggle="bodyCetak" class="w-full flex items-center justify-between text-left mb-3" onclick="toggleSeksi('bodyCetak',this)" aria-expanded="true">
+      <button type="button" data-toggle="bodyCetak" class="w-full flex items-center justify-between text-left" onclick="toggleSeksi('bodyCetak',this)" aria-expanded="false">
         <span class="font-bold"><i class="fa-solid fa-print text-blue-700 mr-2"></i>Cetak Data</span>
-        <i data-chev="bodyCetak" class="fa-solid fa-chevron-up text-slate-500 transition-transform"></i>
+        <i data-chev="bodyCetak" class="fa-solid fa-chevron-up text-slate-500 transition-transform" style="transform:rotate(180deg)"></i>
       </button>
-      <div id="bodyCetak"><div class="grid sm:grid-cols-3 gap-2">
+      <div id="bodyCetak" class="hidden mt-3"><div class="grid sm:grid-cols-3 gap-2">
         <select id="by" class="inp" onchange="fillVal()">
           <option value="">Semua data</option><option value="pendata_nama">Pendata</option>
           <option value="tps">TPS &amp; Wilayah</option><option value="potensi">Potensi</option>
@@ -111,14 +110,16 @@
     </div>
 
     <div class="bg-white rounded-2xl shadow p-4">
-      <h2 class="font-bold mb-3"><i class="fa-solid fa-users-gear text-blue-700 mr-2"></i>Kelola Pendata</h2>
+      <button type="button" data-toggle="bodyPendata" class="w-full flex items-center justify-between text-left" onclick="toggleSeksi('bodyPendata',this)" aria-expanded="false"><span class="font-bold"><i class="fa-solid fa-users-gear text-blue-700 mr-2"></i>Kelola Pendata</span><i data-chev="bodyPendata" class="fa-solid fa-chevron-up text-slate-500 transition-transform" style="transform:rotate(180deg)"></i></button>
+      <div id="bodyPendata" class="hidden mt-3">
       <button class="btn" onclick="formPendata()"><i class="fa-solid fa-plus mr-1"></i>Tambah Pendata</button>
       <div class="relative my-3">
         <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
         <input id="cariPendata" class="inp pl-9" placeholder="Cari pendata (nama atau nomor telepon)" oninput="renderPendata()"></div>
-      <div id="navPendata"></div>
       <div id="wrapPendata" class="tbl-wrap"><table class="tbl tbl-t whitespace-nowrap">
         <tbody id="pendataBody"></tbody></table></div>
+      <div id="navPendata"></div>
+      </div>
       
     </div>
   </main>
@@ -129,18 +130,20 @@
   <div class="js-header"></div>
   <main class="max-w-3xl mx-auto p-4 space-y-5">
     <div class="bg-white rounded-2xl shadow p-4">
-      <div class="flex items-center gap-2 mb-3">
-        <button type="button" data-toggle="bodyDiri" class="flex-1 text-left font-bold" onclick="toggleSeksi('bodyDiri',this)" aria-expanded="true"><i class="fa-solid fa-id-card text-blue-700 mr-2"></i>Data Diri</button>
+      <div class="flex items-center gap-2">
+        <button type="button" data-toggle="bodyDiri" class="flex-1 text-left font-bold" onclick="toggleSeksi('bodyDiri',this)" aria-expanded="false"><i class="fa-solid fa-id-card text-blue-700 mr-2"></i>Data Diri</button>
         <button class="text-sm text-blue-700 font-semibold" onclick="ubahDiri()">Ubah</button>
-        <button type="button" data-toggle="bodyDiri" class="w-8 h-8 rounded-full hover:bg-slate-100 text-slate-500" onclick="toggleSeksi('bodyDiri',this)" aria-expanded="true" aria-label="Ciutkan atau buka Data Diri"><i data-chev="bodyDiri" class="fa-solid fa-chevron-up transition-transform"></i></button>
+        <button type="button" data-toggle="bodyDiri" class="w-8 h-8 rounded-full hover:bg-slate-100 text-slate-500" onclick="toggleSeksi('bodyDiri',this)" aria-expanded="false" aria-label="Ciutkan atau buka Data Diri"><i data-chev="bodyDiri" class="fa-solid fa-chevron-up transition-transform" style="transform:rotate(180deg)"></i></button>
       </div>
-      <div id="bodyDiri"><dl id="diri" class="grid grid-cols-3 gap-y-2 text-sm"></dl></div>
+      <div id="bodyDiri" class="hidden mt-3"><dl id="diri" class="grid grid-cols-3 gap-y-2 text-sm"></dl></div>
     </div>
 
     <div class="bg-white rounded-2xl shadow p-4">
-      <h2 class="font-bold mb-3"><i class="fa-solid fa-chart-simple text-blue-700 mr-2"></i>Jumlah Data</h2>
+      <button type="button" data-toggle="bodyJumlah" class="w-full flex items-center justify-between text-left" onclick="toggleSeksi('bodyJumlah',this)" aria-expanded="false"><span class="font-bold"><i class="fa-solid fa-chart-simple text-blue-700 mr-2"></i>Jumlah Data</span><i data-chev="bodyJumlah" class="fa-solid fa-chevron-up text-slate-500 transition-transform" style="transform:rotate(180deg)"></i></button>
+      <div id="bodyJumlah" class="hidden mt-3">
       <div id="sum" class="grid grid-cols-3 gap-3 text-center"></div>
       <p class="text-xs text-slate-500 mt-2">Data ganda hanya bisa dilihat. Penanganannya oleh admin.</p>
+      </div>
     </div>
 
     <div class="bg-white rounded-2xl shadow p-4">
@@ -149,9 +152,9 @@
       <div class="relative mt-3">
         <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
         <input id="cariData" class="inp pl-9" placeholder="Cari data (nama, NIK, kelurahan, hubungan)" oninput="renderUser()"></div>
-      <div id="navData" class="mt-3"></div>
-      <div id="wrapData" class="tbl-wrap"><table class="tbl tbl-t whitespace-nowrap">
+      <div id="wrapData" class="tbl-wrap mt-3"><table class="tbl tbl-t whitespace-nowrap">
         <tbody id="dataBody"></tbody></table></div>
+      <div id="navData"></div>
     </div>
 
     
@@ -368,6 +371,7 @@ function toggleSeksi(id, btn) {
   const ic = document.querySelector('[data-chev="' + id + '"]');
   if (ic) ic.style.transform = ciut ? 'rotate(180deg)' : '';
   document.querySelectorAll('[data-toggle="' + id + '"]').forEach(b => b.setAttribute('aria-expanded', String(!ciut)));
+  requestAnimationFrame(() => ['wrapPendata', 'wrapData'].forEach(updNav));
 }
 function waLink(hp) {
   let d = String(hp || '').replace(/\D/g, '');
@@ -385,7 +389,7 @@ document.addEventListener('keydown', e => {
 /* ---------- Navigasi tabel melintang ---------- */
 function navBar(id) {
   const b = (a, ic, t) => `<button type="button" class="nav-btn" data-nav="${id}" data-aksi="${a}" onclick="geser('${id}','${a}')" title="${t}" aria-label="${t}"><i class="fa-solid ${ic}"></i></button>`;
-  return `<div class="flex justify-end gap-1.5 mb-2">${b('awal','fa-angles-left','Ke awal')}${b('kiri','fa-angle-left','Geser ke kiri')}${b('kanan','fa-angle-right','Geser ke kanan')}${b('akhir','fa-angles-right','Ke paling akhir')}</div>`;
+  return `<div class="flex justify-end gap-1.5 mt-2">${b('awal','fa-angles-left','Ke awal')}${b('kiri','fa-angle-left','Geser ke kiri')}${b('kanan','fa-angle-right','Geser ke kanan')}${b('akhir','fa-angles-right','Ke paling akhir')}</div>`;
 }
 function geser(id, aksi) {
   const w = $(id); if (!w) return;
@@ -570,7 +574,7 @@ function renderPendata() {
     ['Bersih', p => `<span class="text-green-700 font-semibold">${stat(p).bersih}</span>`],
     ['Aksi', p => `<div class="flex flex-col gap-1.5">
       <button class="ba ba-g" onclick="lihatPendata('${p.id}')">Lihat</button>
-      <button class="ba ba-y" onclick="resetPw('${p.id}')">Reset PIN</button>
+      <button class="ba ba-y" onclick="resetPw('${p.id}')">Reset Password</button>
       <button class="ba ba-r" onclick="hapusPendata('${p.id}')">Hapus</button></div>`]
   ];
   $('pendataBody').innerHTML = list.length
@@ -590,11 +594,11 @@ function formPendata() {
 }
 async function resetPw(id) {
   const p = PEND.find(x => x.id === id) || {};
-  const ok = await konfirmasi({ judul: 'Reset PIN?', tipe: 'peringatan', tombol: 'Ya, reset',
-    pesan: 'PIN ' + (p.nama || p.no_hp || 'pendata ini') + ' akan dihapus. Pendata diminta membuat PIN baru saat masuk berikutnya.' });
+  const ok = await konfirmasi({ judul: 'Reset Password?', tipe: 'peringatan', tombol: 'Ya, reset',
+    pesan: 'Password ' + (p.nama || p.no_hp || 'pendata ini') + ' akan dihapus. Pendata diminta membuat password baru saat masuk berikutnya.' });
   if (!ok) return;
-  try { await rpc('admin_pendata_reset', { p_pass: S.pass, p_id: id }); await loadPendata(); toast('PIN berhasil direset'); }
-  catch (e) { notif(e.message, 'Gagal reset PIN'); }
+  try { await rpc('admin_pendata_reset', { p_pass: S.pass, p_id: id }); await loadPendata(); toast('Password berhasil direset'); }
+  catch (e) { notif(e.message, 'Gagal reset password'); }
 }
 async function hapusPendata(id) {
   const p = PEND.find(x => x.id === id) || {};
@@ -635,9 +639,10 @@ function renderLihat() {
       ? `<button class="ba ${d.unggul ? 'ba-o' : 'ba-r'}" onclick="hapusGanda('${d.id}')">Hapus</button>`
       : '<span class="text-slate-400">-</span>']
   ];
-  $('lihatBody').innerHTML = head + navBar('wrapLihat') + `<div id="wrapLihat" class="tbl-wrap"><table class="tbl tbl-t whitespace-nowrap"><tbody>
+  $('lihatBody').innerHTML = head + `<div id="wrapLihat" class="tbl-wrap"><table class="tbl tbl-t whitespace-nowrap"><tbody>
     ${baris.map(([lb, f]) => `<tr><th>${lb}</th>${urut.map((d, i) => `<td>${f(d, i)}</td>`).join('')}</tr>`).join('')}
-    </tbody></table></div>`;
+    </tbody></table></div>
+    ${navBar('wrapLihat')}`;
   pasangNav('wrapLihat'); $('wrapLihat').scrollLeft = x0;
 }
 async function hapusGanda(id) {
