@@ -16,6 +16,18 @@
   .btn{background:#15803d;color:#fff;font-weight:700;border-radius:.6rem;padding:.65rem 1rem}
   .btn:hover{background:#166534} .btn:disabled{opacity:.6}
   .btn-b{background:#1d4ed8} .btn-b:hover{background:#1e40af}
+  .tbl-wrap{overflow-x:auto;border:1px solid #e2e8f0;border-radius:.75rem}
+  .tbl{width:100%;font-size:.875rem;border-collapse:separate;border-spacing:0}
+  .tbl th{background:#f1f5f9;color:#475569;font-weight:700;text-align:left;padding:.7rem 1rem;white-space:nowrap;border-bottom:1px solid #e2e8f0}
+  .tbl td{padding:.75rem 1rem;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+  .tbl tbody tr:last-child td{border-bottom:0}
+  .tbl tbody tr:hover td{background:#f8fafc}
+  .ba{display:inline-block;padding:.35rem .8rem;border-radius:.5rem;font-size:.75rem;font-weight:700;color:#fff;white-space:nowrap}
+  .ba+.ba{margin-left:.4rem}
+  .ba-g{background:#16a34a}.ba-g:hover{background:#15803d}
+  .ba-y{background:#facc15;color:#422006}.ba-y:hover{background:#eab308}
+  .ba-r{background:#dc2626}.ba-r:hover{background:#b91c1c}
+  .ba-b{background:#1d4ed8}.ba-b:hover{background:#1e40af}
 </style>
 </head>
 <body class="bg-slate-100 min-h-screen">
@@ -24,7 +36,7 @@
 <div id="splash" class="fixed inset-0 z-50 bg-green-800 transition-transform duration-700 ease-in-out">
   <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
     <p class="absolute bottom-full left-1/2 -translate-x-1/2 mb-6 whitespace-nowrap text-2xl font-extrabold text-white">Selamat Datang</p>
-    <img class="js-logo w-40 h-40 object-contain" alt="https://res.cloudinary.com/q7sznixw/image/upload/v1791355406/Logo_SIDAK_Data_Konstituen_i9hub5.webp">
+    <img class="js-logo w-40 h-40 object-contain" alt="https://res.cloudinary.com/q7sznixw/image/upload/v1788749592/6_vbabok.png">
   </div>
   <p class="absolute bottom-4 w-full text-center text-xs text-green-100">Powered by Anto Design Concept &copy; 2026</p>
 </div>
@@ -81,9 +93,13 @@
         <input id="nnama" class="inp" placeholder="Nama (opsional)">
         <button class="btn" onclick="tambahPendata()"><i class="fa-solid fa-plus mr-1"></i>Tambah pendata</button>
       </div>
-      <div class="overflow-x-auto"><table class="w-full text-sm">
-        <thead class="text-left text-slate-500"><tr><th class="py-2">No. HP</th><th>Nama</th><th>Data</th><th>Status</th><th></th></tr></thead>
+      <div class="relative mb-3">
+        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+        <input id="cariPendata" class="inp pl-9" placeholder="Cari pendata (nama atau nomor telepon)" oninput="PLIMIT=20;renderPendata()"></div>
+      <div class="tbl-wrap"><table class="tbl">
+        <thead><tr><th>No</th><th>No. HP</th><th>Nama</th><th>Data</th><th>Status</th><th>Aksi</th></tr></thead>
         <tbody id="pendataBody"></tbody></table></div>
+      <div id="pendataMore" class="text-center mt-3"></div>
     </div>
   </main>
 </section>
@@ -103,9 +119,10 @@
     <div class="bg-white rounded-2xl shadow p-4">
       <h2 class="font-bold mb-3"><i class="fa-solid fa-user-plus text-blue-700 mr-2"></i>Pendataan</h2>
       <button class="btn w-full" onclick="formData()">Tambah data konstituen</button>
-      <div class="overflow-x-auto mt-3"><table class="w-full text-sm">
-        <thead class="text-left text-slate-500"><tr><th class="py-2">Nama</th><th>NIK</th><th>Kelurahan</th><th></th></tr></thead>
+      <div class="tbl-wrap mt-3"><table class="tbl">
+        <thead><tr><th>No</th><th>Nama</th><th>NIK</th><th>Hubungan</th><th>Kelurahan</th><th>Aksi</th></tr></thead>
         <tbody id="dataBody"></tbody></table></div>
+      <div id="dataMore" class="text-center mt-3"></div>
     </div>
 
     <div class="bg-white rounded-2xl shadow p-4">
@@ -126,13 +143,14 @@
 
 <!-- MODAL -->
 <div id="modal" class="hidden fixed inset-0 z-40 bg-black/50 items-center justify-center p-4"></div>
+<div id="confirm" class="hidden fixed inset-0 z-[60] bg-black/60 items-center justify-center p-4"></div>
 
 <script>
 /* ================== KONFIGURASI ================== */
 const SUPABASE_URL      = 'https://xnxodvsycgtsgvofofyh.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_8SOrlhZ__osfT14ZKPmJtg_vy20APAW';
 const LOGO_URL          = 'https://res.cloudinary.com/q7sznixw/image/upload/v1791355406/Logo_SIDAK_Data_Konstituen_i9hub5.webp';
-const HEADER_IMG_URL    = 'https://res.cloudinary.com/q7sznixw/image/upload/v1790743670/SP_11zon_edea6t.webp';
+const HEADER_IMG_URL    = 'https://res.cloudinary.com/q7sznixw/image/upload/v1788749592/6_vbabok.png';
 /* ================================================= */
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -263,6 +281,43 @@ function openForm({ title, keys, vals = {}, readonly = [], closable = true, onSa
 }
 function closeForm() { $('modal').classList.add('hidden'); $('modal').classList.remove('flex'); $('modal').innerHTML = ''; }
 
+/* ---------- Dialog & toast buatan sendiri ---------- */
+const DLG = {
+  bahaya:['bg-red-100 text-red-600','fa-trash-can','bg-red-600 hover:bg-red-700'],
+  peringatan:['bg-amber-100 text-amber-600','fa-key','bg-amber-500 hover:bg-amber-600'],
+  galat:['bg-red-100 text-red-600','fa-circle-exclamation','bg-slate-700 hover:bg-slate-800'],
+  info:['bg-blue-100 text-blue-600','fa-circle-info','bg-blue-600 hover:bg-blue-700']
+};
+function dialog({ judul, pesan, tombol, tipe, batal }) {
+  return new Promise(res => {
+    const w = DLG[tipe], c = $('confirm');
+    c.innerHTML = `<div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center">
+      <div class="mx-auto w-14 h-14 rounded-full flex items-center justify-center text-2xl ${w[0]}"><i class="fa-solid ${w[1]}"></i></div>
+      <h3 class="font-bold text-lg mt-4">${esc(judul)}</h3>
+      <p class="text-sm text-slate-600 mt-1">${esc(pesan)}</p>
+      <div class="flex gap-2 mt-5">
+        ${batal ? '<button id="cn" class="flex-1 rounded-lg border border-slate-300 py-2.5 font-semibold text-slate-700 hover:bg-slate-50">Batal</button>' : ''}
+        <button id="cy" class="flex-1 rounded-lg py-2.5 font-semibold text-white ${w[2]}">${esc(tombol)}</button></div></div>`;
+    c.classList.remove('hidden'); c.classList.add('flex');
+    const tutup = v => { c.classList.add('hidden'); c.classList.remove('flex'); c.innerHTML = ''; document.removeEventListener('keydown', kd); res(v); };
+    const kd = e => { if (e.key === 'Escape') tutup(false); };
+    document.addEventListener('keydown', kd);
+    c.onclick = e => { if (e.target === c) tutup(false); };
+    $('cy').onclick = () => tutup(true);
+    if (batal) $('cn').onclick = () => tutup(false);
+    $('cy').focus();
+  });
+}
+const konfirmasi = o => dialog({ tombol: 'Ya, lanjutkan', tipe: 'bahaya', batal: true, ...o });
+const notif = (pesan, judul = 'Terjadi kendala', tipe = 'galat') => dialog({ judul, pesan, tombol: 'Mengerti', tipe, batal: false });
+function toast(t) {
+  const e = document.createElement('div');
+  e.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 z-[70] bg-slate-900 text-white text-sm font-semibold rounded-full px-5 py-2.5 shadow-lg';
+  e.textContent = t; document.body.appendChild(e); setTimeout(() => e.remove(), 2500);
+}
+const POTC = { Tinggi:'bg-green-100 text-green-700', Sedang:'bg-amber-100 text-amber-700', Rendah:'bg-slate-200 text-slate-600' };
+let PLIMIT = 20, ULIMIT = 20;
+
 /* ---------- ADMIN ---------- */
 const CARDS = [
   ['masuk','Data Masuk','fa-inbox','from-blue-600 to-blue-400'],
@@ -283,7 +338,7 @@ async function loadAdmin(silent) {
     }).join('');
     ADATA = await rpc('admin_data', { p_pass: S.pass });
     fillVal(); loadPendata();
-  } catch (e) { if (!silent) alert('Gagal memuat data: ' + e.message); }
+  } catch (e) { if (!silent) notif('Gagal memuat data: ' + e.message); }
 }
 function fillVal() {
   const by = $('by').value, sel = $('val');
@@ -302,28 +357,49 @@ function cetakAdmin() {
   printRows('Laporan Data Konstituen - ' + judul, rows, true);
 }
 async function loadPendata() {
-  const l = await rpc('admin_pendata_list', { p_pass: S.pass });
-  PEND = l;
-  $('pendataBody').innerHTML = l.map(p => `<tr class="border-t">
-    <td class="py-2">${esc(p.no_hp)}</td><td>${esc(p.nama || '-')}</td><td>${p.jumlah}</td>
-    <td>${p.sudah_registrasi ? '<span class="text-green-700">Aktif</span>' : '<span class="text-amber-600">Belum registrasi</span>'}</td>
-    <td class="text-right whitespace-nowrap">
-      <button class="text-green-700 font-semibold mr-3" onclick="lihatPendata('${p.id}')">Lihat</button>
-      <button class="text-blue-700 mr-3" onclick="resetPw('${p.id}')">Reset password</button>
-      <button class="text-red-600" onclick="hapusPendata('${p.id}')">Hapus</button></td></tr>`).join('')
-    || '<tr><td colspan="5" class="py-3 text-slate-500">Belum ada pendata. Tambahkan nomor telepon di atas.</td></tr>';
+  PEND = await rpc('admin_pendata_list', { p_pass: S.pass });
+  renderPendata();
+}
+function renderPendata() {
+  const q = ($('cariPendata').value || '').toLowerCase().trim();
+  const list = PEND.filter(p => !q || (p.nama || '').toLowerCase().includes(q) || (p.no_hp || '').includes(q));
+  const rows = list.slice(0, PLIMIT);
+  $('pendataBody').innerHTML = rows.map((p, i) => `<tr>
+    <td>${i + 1}</td><td class="whitespace-nowrap">${esc(p.no_hp)}</td><td>${esc(p.nama || '-')}</td><td>${p.jumlah}</td>
+    <td>${p.sudah_registrasi
+      ? '<span class="rounded-full bg-green-100 text-green-700 text-xs font-semibold px-2.5 py-1">Aktif</span>'
+      : '<span class="rounded-full bg-amber-100 text-amber-700 text-xs font-semibold px-2.5 py-1 whitespace-nowrap">Belum registrasi</span>'}</td>
+    <td class="whitespace-nowrap">
+      <button class="ba ba-g" onclick="lihatPendata('${p.id}')">Lihat</button>
+      <button class="ba ba-y" onclick="resetPw('${p.id}')">Reset Password</button>
+      <button class="ba ba-r" onclick="hapusPendata('${p.id}')">Hapus</button></td></tr>`).join('')
+    || `<tr><td colspan="6" class="text-slate-500">${q ? 'Tidak ada pendata yang cocok dengan pencarian.' : 'Belum ada pendata. Tambahkan nomor telepon di atas.'}</td></tr>`;
+  $('pendataMore').innerHTML = list.length
+    ? `<p class="text-xs text-slate-500 mb-2">Menampilkan ${rows.length} dari ${list.length} pendata</p>` +
+      (list.length > PLIMIT ? '<button class="btn btn-b" onclick="PLIMIT+=20;renderPendata()"><i class="fa-solid fa-plus mr-1"></i>Tambah 20 baris</button>' : '')
+    : '';
 }
 async function tambahPendata() {
-  try { await rpc('admin_pendata_tambah', { p_pass: S.pass, p_hp: $('nhp').value, p_nama: $('nnama').value });
-    $('nhp').value = ''; $('nnama').value = ''; loadPendata(); } catch (e) { alert(e.message); }
+  try {
+    await rpc('admin_pendata_tambah', { p_pass: S.pass, p_hp: $('nhp').value, p_nama: $('nnama').value });
+    $('nhp').value = ''; $('nnama').value = ''; await loadPendata(); toast('Pendata ditambahkan');
+  } catch (e) { notif(e.message, 'Gagal menambah pendata'); }
 }
 async function resetPw(id) {
-  if (!confirm('Reset password pendata ini? Ia akan diminta membuat password baru saat masuk.')) return;
-  try { await rpc('admin_pendata_reset', { p_pass: S.pass, p_id: id }); loadPendata(); } catch (e) { alert(e.message); }
+  const p = PEND.find(x => x.id === id) || {};
+  const ok = await konfirmasi({ judul: 'Reset password?', tipe: 'peringatan', tombol: 'Ya, reset',
+    pesan: 'Password ' + (p.nama || p.no_hp || 'pendata ini') + ' akan dihapus. Pendata diminta membuat password baru saat masuk berikutnya.' });
+  if (!ok) return;
+  try { await rpc('admin_pendata_reset', { p_pass: S.pass, p_id: id }); await loadPendata(); toast('Password berhasil direset'); }
+  catch (e) { notif(e.message, 'Gagal reset password'); }
 }
 async function hapusPendata(id) {
-  if (!confirm('Hapus pendata ini beserta SEMUA data yang ia input? Tindakan ini tidak bisa dibatalkan.')) return;
-  try { await rpc('admin_pendata_hapus', { p_pass: S.pass, p_id: id }); loadAdmin(); } catch (e) { alert(e.message); }
+  const p = PEND.find(x => x.id === id) || {};
+  const ok = await konfirmasi({ judul: 'Hapus pendata?', tipe: 'bahaya', tombol: 'Ya, hapus',
+    pesan: (p.nama || p.no_hp || 'Pendata ini') + ' beserta ' + (p.jumlah || 0) + ' data yang ia input akan dihapus permanen dan tidak bisa dikembalikan.' });
+  if (!ok) return;
+  try { await rpc('admin_pendata_hapus', { p_pass: S.pass, p_id: id }); await loadAdmin(true); toast('Pendata berhasil dihapus'); }
+  catch (e) { notif(e.message, 'Gagal menghapus pendata'); }
 }
 
 /* ---------- Sinkronisasi seketika (admin) ---------- */
@@ -349,14 +425,15 @@ function viewModal(title, inner, actions = '') {
 }
 function tabelData(rows, aksi) {
   if (!rows.length) return '<p class="text-slate-500 text-sm">Belum ada data.</p>';
-  return `<table class="w-full text-sm whitespace-nowrap"><thead class="text-left text-slate-500"><tr>
-    <th class="py-2 pr-3">Nama</th><th class="pr-3">NIK</th><th class="pr-3">JK</th><th class="pr-3">Hubungan</th>
-    <th class="pr-3">Potensi</th><th class="pr-3">Kelurahan</th><th class="pr-3">Kecamatan</th><th class="pr-3">TPS</th><th>Ket.</th>${aksi ? '<th class="pl-3">Aksi</th>' : ''}</tr></thead><tbody>
-    ${rows.map(d => `<tr class="border-t"><td class="py-2 pr-3">${esc(d.nama)}</td><td class="pr-3">${esc(d.nik)}</td>
-      <td class="pr-3">${d.jenis_kelamin || ''}</td><td class="pr-3">${esc(d.hubungan || (d.is_diri ? 'Data diri' : '-'))}</td>
-      <td class="pr-3">${esc(d.potensi)}</td><td class="pr-3">${esc(d.kelurahan)}</td><td class="pr-3">${esc(d.kecamatan)}</td>
-      <td class="pr-3">${esc(d.no_tps || '')}</td><td class="text-red-600">${d.ganda ? 'Ganda' : ''}</td>${aksi ? `<td class="pl-3">${d.is_diri ? '<span class="text-slate-400">-</span>' : `<button class="text-red-600 font-semibold" onclick="hapusData('${d.id}','${d.pendata_id}')">Hapus</button>`}</td>` : ''}</tr>`).join('')}
-    </tbody></table>`;
+  return `<div class="tbl-wrap"><table class="tbl whitespace-nowrap"><thead><tr>
+    <th>No</th><th>Nama</th><th>NIK</th><th>JK</th><th>Hubungan</th><th>Potensi</th><th>Kelurahan</th><th>Kecamatan</th><th>TPS</th><th>Ket.</th>${aksi ? '<th>Aksi</th>' : ''}</tr></thead><tbody>
+    ${rows.map((d, i) => `<tr><td>${i + 1}</td><td class="font-semibold">${esc(d.nama)}</td><td>${esc(d.nik)}</td>
+      <td>${d.jenis_kelamin || ''}</td><td>${esc(d.hubungan || (d.is_diri ? 'Data diri' : '-'))}</td>
+      <td><span class="rounded-full text-xs font-semibold px-2.5 py-1 ${POTC[d.potensi] || ''}">${esc(d.potensi)}</span></td>
+      <td>${esc(d.kelurahan)}</td><td>${esc(d.kecamatan)}</td><td>${esc(d.no_tps || '')}</td>
+      <td>${d.ganda ? '<span class="rounded-full bg-red-100 text-red-600 text-xs font-semibold px-2.5 py-1">Ganda</span>' : ''}</td>
+      ${aksi ? `<td>${d.is_diri ? '<span class="text-slate-400">-</span>' : `<button class="ba ba-r" onclick="hapusData('${d.id}','${d.pendata_id}')">Hapus</button>`}</td>` : ''}</tr>`).join('')}
+    </tbody></table></div>`;
 }
 function lihatPendata(id) {
   const p = PEND.find(x => x.id === id) || {}, rows = ADATA.filter(d => d.pendata_id === id);
@@ -365,12 +442,15 @@ function lihatPendata(id) {
 }
 async function hapusData(id, pendataId) {
   const d = ADATA.find(x => x.id === id);
-  if (!confirm('Hapus data "' + (d ? d.nama : '') + '"? Tindakan ini tidak bisa dibatalkan.')) return;
+  const ok = await konfirmasi({ judul: 'Hapus data?', tipe: 'bahaya', tombol: 'Ya, hapus',
+    pesan: 'Data "' + (d ? d.nama : '') + '" akan dihapus permanen dan tidak bisa dikembalikan.' });
+  if (!ok) return;
   try {
     await rpc('admin_data_hapus', { p_pass: S.pass, p_id: id });
     await loadAdmin(true);
     lihatPendata(pendataId);   // tampilkan ulang daftar yang sudah diperbarui
-  } catch (e) { alert('Gagal menghapus: ' + e.message); }
+    toast('Data berhasil dihapus');
+  } catch (e) { notif(e.message, 'Gagal menghapus data'); }
 }
 function cetakPendata(id) {
   const p = PEND.find(x => x.id === id) || {};
@@ -392,12 +472,21 @@ async function loadUser() {
     $('sum').innerHTML = [['Laki-laki',s.laki,'fa-mars','text-blue-700'],['Perempuan',s.perempuan,'fa-venus','text-pink-600'],['Data ganda',s.ganda,'fa-clone','text-red-600']]
       .map(([k, n, ic, c]) => `<div class="rounded-xl bg-slate-50 p-3"><i class="fa-solid ${ic} ${c} text-xl"></i><p class="text-2xl font-extrabold">${n}</p><p class="text-xs text-slate-500">${k}</p></div>`).join('');
     UDATA = await rpc('user_data', ua());
-    $('dataBody').innerHTML = UDATA.map((d, i) => `<tr class="border-t">
-      <td class="py-2">${esc(d.nama)}${d.ganda ? ' <span class="text-xs text-red-600">(ganda)</span>' : ''}</td>
-      <td>${esc(d.nik)}</td><td>${esc(d.kelurahan)}</td>
-      <td class="text-right"><button class="text-blue-700" onclick="formData(${i})">Ubah</button></td></tr>`).join('')
-      || '<tr><td colspan="4" class="py-3 text-slate-500">Belum ada data. Tekan tombol di atas untuk mulai mendata.</td></tr>';
-  } catch (e) { alert('Sesi tidak valid: ' + e.message); keluar(); }
+    renderUser();
+  } catch (e) { notif('Sesi tidak valid atau sudah berakhir. Silakan masuk kembali.', 'Sesi berakhir').then(keluar); }
+}
+function renderUser() {
+  const rows = UDATA.slice(0, ULIMIT);
+  $('dataBody').innerHTML = rows.map((d, i) => `<tr>
+    <td>${i + 1}</td>
+    <td class="font-semibold">${esc(d.nama)}${d.ganda ? ' <span class="ml-1 rounded-full bg-red-100 text-red-600 text-xs font-semibold px-2 py-0.5">Ganda</span>' : ''}</td>
+    <td>${esc(d.nik)}</td><td class="whitespace-nowrap">${esc(d.hubungan || '-')}</td><td>${esc(d.kelurahan)}</td>
+    <td><button class="ba ba-b" onclick="formData(${i})">Ubah</button></td></tr>`).join('')
+    || '<tr><td colspan="6" class="text-slate-500">Belum ada data. Tekan tombol di atas untuk mulai mendata.</td></tr>';
+  $('dataMore').innerHTML = UDATA.length
+    ? `<p class="text-xs text-slate-500 mb-2">Menampilkan ${rows.length} dari ${UDATA.length} data</p>` +
+      (UDATA.length > ULIMIT ? '<button class="btn btn-b" onclick="ULIMIT+=20;renderUser()"><i class="fa-solid fa-plus mr-1"></i>Tambah 20 baris</button>' : '')
+    : '';
 }
 function ubahDiri(closable = true) {
   openForm({
