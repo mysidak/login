@@ -118,7 +118,7 @@
         <input id="cariPendata" class="inp pl-9" placeholder="Cari pendata (nama atau nomor telepon)" oninput="renderPendata()"></div>
       <div id="wrapPendata" class="tbl-wrap"><table class="tbl tbl-t whitespace-nowrap">
         <tbody id="pendataBody"></tbody></table></div>
-      <div id="navPendata"></div>
+      <div id="navPendata" class="mt-2"></div>
       </div>
       
     </div>
@@ -154,18 +154,12 @@
         <input id="cariData" class="inp pl-9" placeholder="Cari data (nama, NIK, kelurahan, hubungan)" oninput="renderUser()"></div>
       <div id="wrapData" class="tbl-wrap mt-3"><table class="tbl tbl-t whitespace-nowrap">
         <tbody id="dataBody"></tbody></table></div>
-      <div id="navData"></div>
-    </div>
-
-    
-
-    <div class="bg-white rounded-2xl shadow p-4">
-      <h2 class="font-bold mb-3"><i class="fa-solid fa-print text-blue-700 mr-2"></i>Cetak Data</h2>
-      <div class="grid grid-cols-2 gap-2">
-        <button class="btn w-full" onclick="lihatUser()"><i class="fa-solid fa-eye mr-1"></i>Lihat data</button>
-        <button class="btn btn-b w-full" onclick="cetakUser()"><i class="fa-solid fa-print mr-1"></i>Cetak data</button>
+      <div class="flex items-center justify-between mt-2">
+        <button type="button" class="nav-btn" style="color:#1d4ed8" onclick="cetakUser()" title="Cetak data" aria-label="Cetak data"><i class="fa-solid fa-print"></i></button>
+        <div id="navData"></div>
       </div>
     </div>
+
   </main>
 </section>
 
@@ -389,7 +383,7 @@ document.addEventListener('keydown', e => {
 /* ---------- Navigasi tabel melintang ---------- */
 function navBar(id) {
   const b = (a, ic, t) => `<button type="button" class="nav-btn" data-nav="${id}" data-aksi="${a}" onclick="geser('${id}','${a}')" title="${t}" aria-label="${t}"><i class="fa-solid ${ic}"></i></button>`;
-  return `<div class="flex justify-end gap-1.5 mt-2">${b('awal','fa-angles-left','Ke awal')}${b('kiri','fa-angle-left','Geser ke kiri')}${b('kanan','fa-angle-right','Geser ke kanan')}${b('akhir','fa-angles-right','Ke paling akhir')}</div>`;
+  return `<div class="flex justify-end gap-1.5">${b('awal','fa-angles-left','Ke awal')}${b('kiri','fa-angle-left','Geser ke kiri')}${b('kanan','fa-angle-right','Geser ke kanan')}${b('akhir','fa-angles-right','Ke paling akhir')}</div>`;
 }
 function geser(id, aksi) {
   const w = $(id); if (!w) return;
@@ -642,7 +636,7 @@ function renderLihat() {
   $('lihatBody').innerHTML = head + `<div id="wrapLihat" class="tbl-wrap"><table class="tbl tbl-t whitespace-nowrap"><tbody>
     ${baris.map(([lb, f]) => `<tr><th>${lb}</th>${urut.map((d, i) => `<td>${f(d, i)}</td>`).join('')}</tr>`).join('')}
     </tbody></table></div>
-    ${navBar('wrapLihat')}`;
+    <div class="mt-2">${navBar('wrapLihat')}</div>`;
   pasangNav('wrapLihat'); $('wrapLihat').scrollLeft = x0;
 }
 async function hapusGanda(id) {
@@ -709,7 +703,6 @@ function cetakPendata(id) {
   const p = PEND.find(x => x.id === id) || {};
   printRows('Laporan Data Konstituen - Pendata: ' + (p.nama || p.no_hp || ''), ADATA.filter(d => d.pendata_id === id), true);
 }
-function lihatUser() { viewModal('Data Saya (' + UDATA.length + ')', tabelData(UDATA)); }
 
 /* ---------- USER ---------- */
 const ua = () => ({ p_hp: S.hp, p_pass: S.pass });
