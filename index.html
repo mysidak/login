@@ -27,6 +27,7 @@
   .ba-g{background:#16a34a}.ba-g:hover{background:#15803d}
   .ba-y{background:#facc15;color:#422006}.ba-y:hover{background:#eab308}
   .ba-r{background:#dc2626}.ba-r:hover{background:#b91c1c}
+  .ba-o{background:#f97316}.ba-o:hover{background:#ea580c}
   .ba-b{background:#1d4ed8}.ba-b:hover{background:#1e40af}
   .abstrak{background-color:#eceff3;background-image:
     radial-gradient(circle at 10% 16%,#dde2e9 0 13%,transparent 13.4%),
@@ -36,10 +37,6 @@
     radial-gradient(circle at 50% 50%,transparent 0 30%,#0000000a 30.2% 30.8%,transparent 31%),
     repeating-linear-gradient(135deg,transparent 0 26px,#0000000a 26px 27px),
     linear-gradient(135deg,#f4f6f9,#e5e8ed)}
-  .tbl tbody tr.row-orange td{background:#ffedd5}
-  .tbl tbody tr.row-red td{background:#fee2e2}
-  .tbl tbody tr.row-orange:hover td{background:#fed7aa}
-  .tbl tbody tr.row-red:hover td{background:#fecaca}
   .tbl-t th{position:sticky;left:0;z-index:1;min-width:6.5rem;border-right:1px solid #e2e8f0}
   .tbl-t td{min-width:11rem;vertical-align:top;border-right:1px solid #f1f5f9}
   .tbl-t tbody tr:hover td{background:transparent}
@@ -52,6 +49,7 @@
 <!-- A. SPLASH -->
 <div id="splash" class="fixed inset-0 z-50 abstrak transition-transform duration-700 ease-in-out">
   <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+    <p class="absolute bottom-full left-1/2 -translate-x-1/2 mb-6 whitespace-nowrap text-2xl font-extrabold text-slate-700">Selamat Datang</p>
     <img class="js-logo w-45 h-45 object-contain" alt="https://res.cloudinary.com/q7sznixw/image/upload/v1791355406/Logo_SIDAK_Data_Konstituen_i9hub5.webp">
   </div>
   <p class="absolute bottom-4 w-full text-center text-xs text-slate-500">Powered by Anto Design Concept &copy; 2026</p>
@@ -429,8 +427,11 @@ const CARDS = [
 const RANK = { Tinggi: 3, Sedang: 2, Rendah: 1 };
 function hitungPrioritas() {
   const grup = {};
-  ADATA.forEach(d => { d.prioritas = false; d.merah = false; if (d.ganda) (grup[d.nik] = grup[d.nik] || []).push(d); });
+  ADATA.forEach(d => { d.prioritas = false; d.merah = false; d.unggul = false; if (d.ganda) (grup[d.nik] = grup[d.nik] || []).push(d); });
   Object.values(grup).forEach(a => {
+    const atas = Math.max(...a.map(d => RANK[d.potensi] || 0));
+    const teratas = a.filter(d => (RANK[d.potensi] || 0) === atas);
+    if (teratas.length === 1) teratas[0].unggul = true;   // satu-satunya yang tertinggi -> tombol oranye
     a.sort((x, y) => ((y.is_diri ? 1 : 0) - (x.is_diri ? 1 : 0))
       || ((RANK[y.potensi] || 0) - (RANK[x.potensi] || 0))
       || (new Date(x.created_at) - new Date(y.created_at)));
@@ -537,7 +538,7 @@ function renderPendata() {
     ['Bersih', p => `<span class="text-green-700 font-semibold">${stat(p).bersih}</span>`],
     ['Aksi', p => `<div class="flex flex-col gap-1.5">
       <button class="ba ba-g" onclick="lihatPendata('${p.id}')">Lihat</button>
-      <button class="ba ba-y" onclick="resetPw('${p.id}')">Reset Password</button>
+      <button class="ba ba-y" onclick="resetPw('${p.id}')">Reset PIN</button>
       <button class="ba ba-r" onclick="hapusPendata('${p.id}')">Hapus</button></div>`]
   ];
   $('pendataBody').innerHTML = list.length
@@ -573,45 +574,46 @@ async function hapusPendata(id) {
 }
 
 /* ---------- Lihat Data (admin, mengikuti filter Cetak Data) ---------- */
-let LIHAT_LIMIT = 20;
 function lihatAdmin() {
-  LIHAT_LIMIT = 20;
   viewModal('Lihat Data', `<div class="flex flex-wrap gap-2 text-xs mb-3">
-    <span class="rounded-full bg-orange-100 text-orange-800 px-3 py-1 font-semibold">Oranye: data ganda prioritas (dipertahankan)</span>
-    <span class="rounded-full bg-red-100 text-red-700 px-3 py-1 font-semibold">Merah: data ganda lainnya</span></div>
+    <span class="rounded-full bg-orange-100 text-orange-800 px-3 py-1 font-semibold">Hapus oranye: prioritas lebih baik dari data ganda lainnya</span>
+    <span class="rounded-full bg-red-100 text-red-700 px-3 py-1 font-semibold">Hapus merah: prioritas sama atau lebih rendah</span></div>
     <div id="lihatBody"></div>`);
   renderLihat();
 }
 function renderLihat() {
   const { rows, judul } = dataCetak();
   const urut = [...rows].sort((a, b) => {
-    if (a.ganda !== b.ganda) return a.ganda ? -1 : 1;                    // data ganda di atas, dikelompokkan per NIK
-    if (a.ganda) return String(a.nik).localeCompare(String(b.nik)) || ((b.prioritas ? 1 : 0) - (a.prioritas ? 1 : 0));
+    if (a.ganda !== b.ganda) return a.ganda ? -1 : 1;                    // data ganda di depan, dikelompokkan per NIK
+    if (a.ganda) return String(a.nik).localeCompare(String(b.nik))
+      || ((RANK[b.potensi] || 0) - (RANK[a.potensi] || 0)) || (new Date(a.created_at) - new Date(b.created_at));
     return String(a.nama).localeCompare(String(b.nama), 'id');
   });
-  const tampil = urut.slice(0, LIHAT_LIMIT);
   const head = `<p class="text-xs text-slate-500 mb-2">${esc(judul)} &middot; ${rows.length} data &middot; ${rows.filter(d => d.ganda).length} ganda</p>`;
   if (!rows.length) { $('lihatBody').innerHTML = head + '<p class="text-slate-500 text-sm">Tidak ada data pada filter ini.</p>'; return; }
-  $('lihatBody').innerHTML = head + `<div class="tbl-wrap"><table class="tbl whitespace-nowrap"><thead><tr>
-    <th>No</th><th>Nama</th><th>NIK</th><th>Hubungan</th><th>Potensi</th><th>Pendata</th><th>Kelurahan</th><th>Ket.</th><th>Aksi</th></tr></thead><tbody>
-    ${tampil.map((d, i) => `<tr class="${d.merah ? 'row-red' : d.prioritas ? 'row-orange' : ''}">
-      <td>${i + 1}</td><td class="font-semibold">${esc(d.nama)}</td><td>${esc(d.nik)}</td>
-      <td>${esc(d.hubungan || (d.is_diri ? 'Data diri' : '-'))}</td>
-      <td><span class="rounded-full text-xs font-semibold px-2.5 py-1 ${POTC[d.potensi] || ''}">${esc(d.potensi)}</span></td>
-      <td>${esc(d.pendata_nama || '')}</td><td>${esc(d.kelurahan)}</td>
-      <td>${d.merah ? '<span class="rounded-full bg-red-200 text-red-800 text-xs font-semibold px-2.5 py-1">Ganda</span>'
-        : d.prioritas ? '<span class="rounded-full bg-orange-200 text-orange-800 text-xs font-semibold px-2.5 py-1">Ganda &middot; Prioritas</span>' : ''}</td>
-      <td>${d.ganda && !d.is_diri ? `<button class="ba ba-r" onclick="hapusGanda('${d.id}')">Hapus</button>` : '<span class="text-slate-400">-</span>'}</td></tr>`).join('')}
-    </tbody></table></div>
-    <div class="text-center mt-3">${urut.length > LIHAT_LIMIT
-      ? `<p class="text-xs text-slate-500 mb-2">Menampilkan ${tampil.length} dari ${urut.length} data</p><button class="btn btn-b" onclick="LIHAT_LIMIT+=20;renderLihat()"><i class="fa-solid fa-plus mr-1"></i>Tambah 20 baris</button>`
-      : `<p class="text-xs text-slate-500">Menampilkan ${tampil.length} dari ${urut.length} data</p>`}</div>`;
+  // Judul di kolom kiri, setiap data satu kolom ke kanan
+  const baris = [
+    ['No', (d, i) => i + 1],
+    ['Nama', d => `<span class="font-semibold">${esc(d.nama)}</span>`],
+    ['NIK', d => esc(d.nik)],
+    ['Hubungan', d => esc(d.hubungan || (d.is_diri ? 'Data diri' : '-'))],
+    ['Potensi', d => `<span class="rounded-full text-xs font-semibold px-2.5 py-1 ${POTC[d.potensi] || ''}">${esc(d.potensi)}</span>`],
+    ['Pendata', d => esc(d.pendata_nama || '')],
+    ['Kelurahan', d => esc(d.kelurahan)],
+    ['Ket.', d => d.ganda ? '<span class="rounded-full bg-red-100 text-red-700 text-xs font-semibold px-2.5 py-1">Ganda</span>' : ''],
+    ['Aksi', d => d.ganda && !d.is_diri
+      ? `<button class="ba ${d.unggul ? 'ba-o' : 'ba-r'}" onclick="hapusGanda('${d.id}')">Hapus</button>`
+      : '<span class="text-slate-400">-</span>']
+  ];
+  $('lihatBody').innerHTML = head + `<div class="tbl-wrap"><table class="tbl tbl-t whitespace-nowrap"><tbody>
+    ${baris.map(([lb, f]) => `<tr><th>${lb}</th>${urut.map((d, i) => `<td>${f(d, i)}</td>`).join('')}</tr>`).join('')}
+    </tbody></table></div>`;
 }
 async function hapusGanda(id) {
   const d = ADATA.find(x => x.id === id); if (!d) return;
   const ok = await konfirmasi({ judul: 'Hapus data ganda?', tipe: 'bahaya', tombol: 'Ya, hapus',
     pesan: 'Data "' + d.nama + '" (NIK ' + d.nik + ') dari ' + (d.pendata_nama || 'pendata') + ' akan dihapus permanen dan tidak bisa dikembalikan.'
-      + (d.prioritas ? ' Perhatian: ini data ganda prioritas, hapus hanya bila memang keliru.' : '') });
+      + (d.unggul ? ' Perhatian: data ini memiliki prioritas lebih baik dari data ganda lainnya, hapus hanya bila memang keliru.' : '') });
   if (!ok) return;
   try { await rpc('admin_data_hapus', { p_pass: S.pass, p_id: id }); await loadAdmin(true); toast('Data berhasil dihapus'); }
   catch (e) { notif(e.message, 'Gagal menghapus data'); }
