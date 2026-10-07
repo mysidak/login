@@ -40,6 +40,11 @@
   .tbl tbody tr.row-red td{background:#fee2e2}
   .tbl tbody tr.row-orange:hover td{background:#fed7aa}
   .tbl tbody tr.row-red:hover td{background:#fecaca}
+  .tbl-t th{position:sticky;left:0;z-index:1;min-width:6.5rem;border-right:1px solid #e2e8f0}
+  .tbl-t td{min-width:11rem;vertical-align:top;border-right:1px solid #f1f5f9}
+  .tbl-t tbody tr:hover td{background:transparent}
+  .tbl-t .ba{display:block;text-align:center}
+  .tbl-t .ba+.ba{margin-left:0}
 </style>
 </head>
 <body class="bg-slate-100 min-h-screen">
@@ -47,7 +52,7 @@
 <!-- A. SPLASH -->
 <div id="splash" class="fixed inset-0 z-50 abstrak transition-transform duration-700 ease-in-out">
   <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-    <img class="js-logo w-50 h-50 object-contain" alt="https://res.cloudinary.com/q7sznixw/image/upload/v1791355406/Logo_SIDAK_Data_Konstituen_i9hub5.webp">
+    <img class="js-logo w-45 h-45 object-contain" alt="https://res.cloudinary.com/q7sznixw/image/upload/v1791355406/Logo_SIDAK_Data_Konstituen_i9hub5.webp">
   </div>
   <p class="absolute bottom-4 w-full text-center text-xs text-slate-500">Powered by Anto Design Concept &copy; 2026</p>
 </div>
@@ -110,8 +115,7 @@
       <div class="relative my-3">
         <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
         <input id="cariPendata" class="inp pl-9" placeholder="Cari pendata (nama atau nomor telepon)" oninput="renderPendata()"></div>
-      <div class="tbl-wrap"><table class="tbl whitespace-nowrap">
-        <thead><tr><th>No</th><th>No. HP</th><th>Nama</th><th>Status</th><th>Data</th><th>Ganda</th><th>Bersih</th><th>Aksi</th></tr></thead>
+      <div class="tbl-wrap"><table class="tbl tbl-t whitespace-nowrap">
         <tbody id="pendataBody"></tbody></table></div>
       
     </div>
@@ -143,8 +147,7 @@
       <div class="relative mt-3">
         <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
         <input id="cariData" class="inp pl-9" placeholder="Cari data (nama, NIK, kelurahan, hubungan)" oninput="renderUser()"></div>
-      <div class="tbl-wrap mt-3"><table class="tbl whitespace-nowrap">
-        <thead><tr><th>No</th><th>Nama</th><th>NIK</th><th>Hubungan</th><th>Kecamatan</th><th>Kelurahan</th><th>TPS</th><th>Aksi</th></tr></thead>
+      <div class="tbl-wrap mt-3"><table class="tbl tbl-t whitespace-nowrap">
         <tbody id="dataBody"></tbody></table></div>
     </div>
 
@@ -514,30 +517,32 @@ function renderPendata() {
   const q = ($('cariPendata').value || '').toLowerCase().trim();
   const list = PEND.filter(p => !q || (p.nama || '').toLowerCase().includes(q) || (p.no_hp || '').includes(q));
   // Data / Ganda / Bersih per pendata (tidak termasuk data diri pendata)
-  const st = {};
+  const st = {}, kosong = { data: 0, ganda: 0, bersih: 0 };
   ADATA.forEach(d => {
     if (d.is_diri) return;
     const a = st[d.pendata_id] = st[d.pendata_id] || { data: 0, ganda: 0, bersih: 0 };
     a.data++; if (d.ganda) a.ganda++; if (!d.merah) a.bersih++;
   });
-  $('pendataBody').innerHTML = list.map((p, i) => {
-    const a = st[p.id] || { data: 0, ganda: 0, bersih: 0 };
-    return `<tr>
-    <td>${i + 1}</td>
-    <td><a href="${waLink(p.no_hp)}" target="_blank" rel="noopener" class="text-green-700 font-semibold hover:underline" title="Chat WhatsApp"><i class="fa-brands fa-whatsapp mr-1"></i>${esc(p.no_hp)}</a></td>
-    <td>${esc(p.nama || '-')}</td>
-    <td>${p.sudah_registrasi
+  const stat = p => st[p.id] || kosong;
+  // Judul di kolom kiri, setiap pendata satu kolom ke kanan
+  const baris = [
+    ['No', (p, i) => i + 1],
+    ['No. HP', p => `<a href="${waLink(p.no_hp)}" target="_blank" rel="noopener" class="text-green-700 font-semibold hover:underline" title="Chat WhatsApp"><i class="fa-brands fa-whatsapp mr-1"></i>${esc(p.no_hp)}</a>`],
+    ['Nama', p => esc(p.nama || '-')],
+    ['Status', p => p.sudah_registrasi
       ? '<span class="rounded-full bg-green-100 text-green-700 text-xs font-semibold px-2.5 py-1">Aktif</span>'
-      : '<span class="rounded-full bg-amber-100 text-amber-700 text-xs font-semibold px-2.5 py-1">Belum registrasi</span>'}</td>
-    <td>${a.data}</td>
-    <td class="${a.ganda ? 'text-red-600 font-bold' : ''}">${a.ganda}</td>
-    <td class="text-green-700 font-semibold">${a.bersih}</td>
-    <td>
+      : '<span class="rounded-full bg-amber-100 text-amber-700 text-xs font-semibold px-2.5 py-1">Belum registrasi</span>'],
+    ['Data', p => stat(p).data],
+    ['Ganda', p => `<span class="${stat(p).ganda ? 'text-red-600 font-bold' : ''}">${stat(p).ganda}</span>`],
+    ['Bersih', p => `<span class="text-green-700 font-semibold">${stat(p).bersih}</span>`],
+    ['Aksi', p => `<div class="flex flex-col gap-1.5">
       <button class="ba ba-g" onclick="lihatPendata('${p.id}')">Lihat</button>
       <button class="ba ba-y" onclick="resetPw('${p.id}')">Reset PIN</button>
-      <button class="ba ba-r" onclick="hapusPendata('${p.id}')">Hapus</button></td></tr>`;
-  }).join('')
-    || `<tr><td colspan="8" class="text-slate-500">${q ? 'Tidak ada pendata yang cocok dengan pencarian.' : 'Belum ada pendata. Tekan Tambah Pendata untuk mendaftarkan nomor telepon.'}</td></tr>`;
+      <button class="ba ba-r" onclick="hapusPendata('${p.id}')">Hapus</button></div>`]
+  ];
+  $('pendataBody').innerHTML = list.length
+    ? baris.map(([lb, f]) => `<tr><th>${lb}</th>${list.map((p, i) => `<td>${f(p, i)}</td>`).join('')}</tr>`).join('')
+    : `<tr><td class="text-slate-500">${q ? 'Tidak ada pendata yang cocok dengan pencarian.' : 'Belum ada pendata. Tekan Tambah Pendata untuk mendaftarkan nomor telepon.'}</td></tr>`;
 }
 function formPendata() {
   const norm = d => { d = String(d || '').replace(/\D/g, ''); return d.startsWith('62') ? '0' + d.slice(2) : d.startsWith('8') ? '0' + d : d; };
@@ -688,12 +693,20 @@ async function loadUser() {
 function renderUser() {
   const q = ($('cariData').value || '').toLowerCase().trim();
   const list = UDATA.filter(d => !q || [d.nama, d.nik, d.kelurahan, d.kecamatan, d.hubungan, d.no_tps].some(v => (v || '').toLowerCase().includes(q)));
-  $('dataBody').innerHTML = list.map((d, i) => `<tr>
-    <td>${i + 1}</td>
-    <td class="font-semibold">${esc(d.nama)}${d.ganda ? ' <span class="ml-1 rounded-full bg-red-100 text-red-600 text-xs font-semibold px-2 py-0.5">Ganda</span>' : ''}</td>
-    <td>${esc(d.nik)}</td><td>${esc(d.hubungan || '-')}</td><td>${esc(d.kecamatan)}</td><td>${esc(d.kelurahan)}</td><td>${esc(d.no_tps || '-')}</td>
-    <td><button class="ba ba-b" onclick="formData(${UDATA.indexOf(d)})">Ubah</button></td></tr>`).join('')
-    || `<tr><td colspan="8" class="text-slate-500">${q ? 'Tidak ada data yang cocok dengan pencarian.' : 'Belum ada data. Tekan tombol di atas untuk mulai mendata.'}</td></tr>`;
+  // Judul di kolom kiri, setiap data konstituen satu kolom ke kanan
+  const baris = [
+    ['No', (d, i) => i + 1],
+    ['Nama', d => `<span class="font-semibold">${esc(d.nama)}</span>${d.ganda ? ' <span class="ml-1 rounded-full bg-red-100 text-red-600 text-xs font-semibold px-2 py-0.5">Ganda</span>' : ''}`],
+    ['NIK', d => esc(d.nik)],
+    ['Hubungan', d => esc(d.hubungan || '-')],
+    ['Kecamatan', d => esc(d.kecamatan)],
+    ['Kelurahan', d => esc(d.kelurahan)],
+    ['TPS', d => esc(d.no_tps || '-')],
+    ['Aksi', d => `<button class="ba ba-b" onclick="formData(${UDATA.indexOf(d)})">Ubah</button>`]
+  ];
+  $('dataBody').innerHTML = list.length
+    ? baris.map(([lb, f]) => `<tr><th>${lb}</th>${list.map((d, i) => `<td>${f(d, i)}</td>`).join('')}</tr>`).join('')
+    : `<tr><td class="text-slate-500">${q ? 'Tidak ada data yang cocok dengan pencarian.' : 'Belum ada data. Tekan tombol di atas untuk mulai mendata.'}</td></tr>`;
 }
 function ubahDiri(closable = true) {
   openForm({
