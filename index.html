@@ -654,13 +654,14 @@ function renderLihat() {
   if (!rows.length) { $('lihatBody').innerHTML = head + '<p class="text-slate-500 text-sm">Tidak ada data pada filter ini.</p>'; return; }
   // Judul di kolom kiri, setiap data satu kolom ke kanan
   const baris = [
-    ['No', (d, i) => i + 1],
     ['Nama', d => `<span class="font-semibold">${esc(d.nama)}</span>`],
     ['NIK', d => esc(d.nik)],
     ['Hubungan', d => esc(d.hubungan || (d.is_diri ? 'Data diri' : '-'))],
     ['Potensi', d => `<span class="rounded-full text-xs font-semibold px-2.5 py-1 ${POTC[d.potensi] || ''}">${esc(d.potensi)}</span>`],
     ['Pendata', d => esc(d.pendata_nama || '')],
+    ['Kecamatan', d => esc(d.kecamatan)],
     ['Kelurahan', d => esc(d.kelurahan)],
+    ['TPS', d => esc(d.no_tps || '-')],
     ['Ket.', d => d.ganda ? '<span class="rounded-full bg-red-100 text-red-700 text-xs font-semibold px-2.5 py-1">Ganda</span>' : ''],
     ['Aksi', d => d.ganda && !d.is_diri
       ? `<button class="ba ${d.unggul ? 'ba-o' : 'ba-r'}" onclick="hapusGanda('${d.id}')">Hapus</button>`
