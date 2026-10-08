@@ -299,11 +299,12 @@ function pasangWilayah(f, vals) {
 // Potensi dihitung otomatis di database dari hubungan ini
 const HUBUNGAN = ['Istri','Anak','Ponakan','Saudara','Keluarga dalam rumah','Keluarga dekat','Teman Akrab',
                   'Tetangga','Keluarga jauh','Kenalan','Warga'];
-function openForm({ title, keys, vals = {}, readonly = [], closable = true, dua = false, onSave }) {
+function openForm({ title, keys, vals = {}, readonly = [], closable = true, dua = false, cari = false, catatan = '', onSave }) {
   const m = $('modal');
   m.innerHTML = `<form class="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto p-5 space-y-3">
     <div class="flex justify-between items-center"><h3 class="font-bold text-lg">${esc(title)}</h3>
       ${closable ? '<button type="button" id="mx" class="text-slate-500 text-xl">&times;</button>' : ''}</div>
+    ${catatan ? `<p class="text-sm text-slate-500 -mt-1">${esc(catatan)}</p>` : ''}
     ${keys.map(k => {
       const [lb, ty] = FIELDS[k], v = vals[k] ?? '', ro = readonly.includes(k) ? 'readonly' : '', req = OPTIONAL.includes(k) ? '' : 'required';
       let el;
@@ -319,14 +320,15 @@ function openForm({ title, keys, vals = {}, readonly = [], closable = true, dua 
       }
       else if (ty === 'hub') el = `<select name="${k}" class="inp" required><option value="">Pilih...</option>${HUBUNGAN.map(o => `<option ${v===o?'selected':''}>${o}</option>`).join('')}</select>`;
       else el = `<input name="${k}" type="${ty}" value="${esc(v)}" class="inp ${ro?'bg-slate-100':''}" ${ro} ${req} ${k==='nik'?'inputmode="numeric" maxlength="16" pattern="\\d{16}" title="NIK harus 16 digit angka"':''}>`;
-      return `<div data-f="${k}"><label class="text-sm font-semibold">${lb}</label>${el}</div>`;
+      return `<div data-f="${k}"><label class="text-sm font-semibold">${lb}</label>${el}${k === 'nik' && cari ? '<div id="prevNik" class="hidden"></div>' : ''}</div>`;
     }).join('')}
     <p id="fmsg" class="text-sm text-red-600"></p>
     ${dua ? '<div class="grid grid-cols-2 gap-2"><button type="submit" value="selesai" class="btn">Simpan &amp; Selesai</button><button type="submit" value="tambah" class="btn btn-b">Simpan &amp; Tambah</button></div>'
-          : '<button class="btn w-full">Simpan</button>'}</form>`;
+          : '<button class="btn w-full">Simpan</button>'}${!closable ? '<button type="button" class="w-full text-sm text-slate-500 underline" onclick="keluar()">Keluar</button>' : ''}</form>`;
   m.classList.remove('hidden'); m.classList.add('flex');
   if (closable) $('mx').onclick = closeForm;
   pasangWilayah(m.querySelector('form'), vals);
+  if (cari) pasangCariNik(m.querySelector('form'));
   m.querySelector('form').onsubmit = async e => {
     e.preventDefault();
     const lanjut = dua && e.submitter && e.submitter.value === 'tambah';
@@ -338,17 +340,48 @@ function openForm({ title, keys, vals = {}, readonly = [], closable = true, dua 
     try {
       await onSave(o);
       if (!lanjut) { closeForm(); return; }
-      // Simpan & Tambah: kosongkan isian pribadi, pertahankan wilayah (kelurahan, kecamatan, TPS)
-      ['nama','nik','jenis_kelamin','no_hp','hubungan'].forEach(k => { if (e.target.elements[k]) e.target.elements[k].value = ''; });
+      // Simpan & Tambah: kosongkan isian untuk data berikutnya
+      ['nik','no_hp','hubungan'].forEach(k => { if (e.target.elements[k]) e.target.elements[k].value = ''; });
+      if ($('prevNik')) $('prevNik').className = 'hidden';
       $('fmsg').className = 'text-sm text-green-700 font-semibold';
       $('fmsg').textContent = 'Data tersimpan. Silakan isi data berikutnya.';
-      e.target.elements['nama'].focus();
+      e.target.elements['nik'].focus();
       e.target.closest('#modal').firstElementChild.scrollTop = 0;
     } catch (er) {
       const t = er.message || '';
       $('fmsg').textContent = t.includes('konstituen_nik') || t.includes('pendata_nik') ? 'NIK harus 16 digit angka.' : 'Gagal menyimpan: ' + t;
     } finally { btns.forEach(b => b.disabled = false); }
   };
+}
+// Pratinjau data master saat NIK 16 digit selesai diketik
+function pasangCariNik(f) {
+  const el = f.elements['nik'], box = $('prevNik'); let urut = 0;
+  const cek = async () => {
+    const v = el.value.trim(); box.className = 'hidden';
+    if (v.length !== 16) return;
+    const saya = ++urut;
+    box.className = 'mt-2 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-500';
+    box.textContent = 'Mencari di data master...';
+    try {
+      const r = await rpc('cari_nik', { ...ua(), p_nik: v });
+      if (saya !== urut) return;
+      if (!r) {
+        box.className = 'mt-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700';
+        box.innerHTML = '<i class="fa-solid fa-circle-xmark mr-1"></i>NIK tidak ditemukan di data master.';
+        return;
+      }
+      box.className = 'mt-2 rounded-lg border border-green-200 bg-green-50 p-3 text-sm';
+      box.innerHTML = `<p class="font-bold text-green-800"><i class="fa-solid fa-circle-check mr-1"></i>${esc(r.nama)}</p>
+        <p class="text-slate-600">${r.jenis_kelamin === 'L' ? 'Laki-laki' : r.jenis_kelamin === 'P' ? 'Perempuan' : '-'} &middot; TPS ${esc(r.no_tps || '-')}</p>
+        <p class="text-slate-600">${esc(r.alamat || '-')}, Kel. ${esc(r.kelurahan || '-')}, Kec. ${esc(r.kecamatan || '-')}</p>`;
+    } catch (er) {
+      if (saya !== urut) return;
+      box.className = 'mt-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700';
+      box.textContent = 'Gagal mencari data master: ' + (er.message || '');
+    }
+  };
+  el.addEventListener('input', cek);
+  if (el.value.length === 16) cek();
 }
 function closeForm() { $('modal').classList.add('hidden'); $('modal').classList.remove('flex'); $('modal').innerHTML = ''; }
 
@@ -713,7 +746,7 @@ async function loadUser() {
     $('diri').innerHTML = [['Nama',p.nama],['NIK',p.nik],['Jenis kelamin',jk],['No. HP',p.no_hp],['Alamat',p.alamat],
       ['Kelurahan',p.kelurahan],['Kecamatan',p.kecamatan],['No. TPS',p.no_tps]]
       .map(([k, v]) => `<dt class="text-slate-500">${k}</dt><dd class="col-span-2 font-semibold">${esc(v || '-')}</dd>`).join('');
-    if (!p.nama) ubahDiri(false);
+    if (!p.nik) ubahDiri(false);
     const s = await rpc('user_ringkasan', ua());
     $('sum').innerHTML = [['Laki-laki',s.laki,'fa-mars','text-blue-700'],['Perempuan',s.perempuan,'fa-venus','text-pink-600'],['Data ganda',s.ganda,'fa-clone','text-red-600']]
       .map(([k, n, ic, c]) => `<div class="rounded-xl bg-slate-50 p-3"><i class="fa-solid ${ic} ${c} text-xl"></i><p class="text-2xl font-extrabold">${n}</p><p class="text-xs text-slate-500">${k}</p></div>`).join('');
@@ -741,17 +774,18 @@ function renderUser() {
 }
 function ubahDiri(closable = true) {
   openForm({
-    title: closable ? 'Ubah Data Diri' : 'Lengkapi Data Diri', closable,
-    keys: ['nama','nik','jenis_kelamin','no_hp','alamat','kecamatan','kelurahan','no_tps'],
-    vals: PROFIL, readonly: ['no_hp'],
+    title: closable ? 'Ubah Data Diri' : 'Lengkapi Data Diri', closable, cari: true,
+    catatan: 'Cukup masukkan NIK Anda. Nama, alamat, kelurahan, kecamatan, dan TPS terisi otomatis dari data master.',
+    keys: ['nik'], vals: PROFIL,
     onSave: async o => { await rpc('user_simpan_diri', { ...ua(), p: o }); loadUser(); }
   });
 }
 function formData(i) {
   const d = i === undefined ? null : UDATA[i];
   openForm({
-    title: d ? 'Ubah Data' : 'Tambah Data', vals: d || {}, dua: !d,
-    keys: ['nama','nik','jenis_kelamin','no_hp','alamat','kecamatan','kelurahan','no_tps','hubungan'],
+    title: d ? 'Ubah Data' : 'Tambah Data', vals: d || {}, dua: !d, cari: true,
+    catatan: 'Masukkan NIK. Nama, alamat, kelurahan, kecamatan, dan TPS terisi otomatis dari data master.',
+    keys: ['nik','no_hp','hubungan'],
     onSave: async o => { await rpc('user_simpan_data', { ...ua(), p_id: d ? d.id : null, p: o }); loadUser(); }
   });
 }
