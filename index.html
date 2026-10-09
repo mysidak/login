@@ -177,7 +177,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_8SOrlhZ__osfT14ZKPmJtg_vy20APAW';
 const LOGO_URL          = 'https://res.cloudinary.com/q7sznixw/image/upload/v1791355406/Logo_SIDAK_Data_Konstituen_i9hub5.webp';
 const HEADER_IMG_URL    = 'https://res.cloudinary.com/q7sznixw/image/upload/v1788749592/6_vbabok.png';
 /* ================================================= */
-
+  
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -193,7 +193,7 @@ function headerHTML() {
     <img src="${HEADER_IMG_URL}" alt="" class="absolute right-0 top-0 h-full w-auto max-w-[55%] object-contain object-right opacity-90 pointer-events-none"
          style="-webkit-mask-image:linear-gradient(to left,#000 40%,transparent);mask-image:linear-gradient(to left,#000 40%,transparent)">
     <div class="relative max-w-5xl mx-auto px-4 py-4 flex flex-col items-start text-left gap-1">
-      <span class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white shadow-md p-2"><img src="${LOGO_URL}" alt="SIDAK" class="max-w-full max-h-full object-contain"></span>
+      <span class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/60 backdrop-blur-sm shadow-md p-0.5"><img src="${LOGO_URL}" alt="SIDAK" class="max-w-full max-h-full object-contain"></span>
       <p class="font-bold text-sm sm:text-base leading-tight">Sistem Informasi Data Konstituen</p>
       <p class="js-date text-xs sm:text-sm text-blue-100"></p>
       <p class="js-time text-xl sm:text-2xl font-extrabold tabular-nums"></p>
@@ -214,7 +214,7 @@ tick(); setInterval(tick, 1000);
 function show(v) { ['login','admin','user'].forEach(x => $('v-'+x).classList.toggle('hidden', x !== v)); }
 function start(sess) {
   S = sess; sessionStorage.setItem('sidak', JSON.stringify(S));
-  if (S.role === 'admin') { show('admin'); loadAdmin(); subscribeAdmin(); } else { show('user'); loadUser(); }
+  if (S.role === 'admin') { show('admin'); loadAdmin(); subscribeAdmin(); } else { show('user'); loadUser(); subscribeUser(); }
 }
 function keluar() { sessionStorage.removeItem('sidak'); S = null; location.reload(); }
 
@@ -603,9 +603,9 @@ function renderPendata() {
     ['Ganda', p => `<span class="${stat(p).ganda ? 'text-red-600 font-bold' : ''}">${stat(p).ganda}</span>`],
     ['Bersih', p => `<span class="text-green-700 font-semibold">${stat(p).bersih}</span>`],
     ['Aksi', p => `<div class="flex flex-col gap-1.5">
-      <button class="ba ba-g" onclick="lihatPendata('${p.id}')">Lihat Data</button>
+      <button class="ba ba-g" onclick="lihatPendata('${p.id}')">Lihat</button>
       <button class="ba ba-y" onclick="resetPw('${p.id}')">Reset Password</button>
-      <button class="ba ba-r" onclick="hapusPendata('${p.id}')">Hapus Pendata</button></div>`]
+      <button class="ba ba-r" onclick="hapusPendata('${p.id}')">Hapus</button></div>`]
   ];
   $('pendataBody').innerHTML = list.length
     ? baris.map(([lb, f]) => `<tr><th>${lb}</th>${list.map((p, i) => `<td>${f(p, i)}</td>`).join('')}</tr>`).join('')
@@ -696,6 +696,18 @@ function subscribeAdmin() {
   setInterval(() => loadAdmin(true), 20000);   // cadangan bila koneksi realtime terputus
 }
 
+/* ---------- Sinkronisasi seketika (user) ---------- */
+// Admin menghapus/mengubah data -> sinyal "berubah" -> data, tanda ganda, dan jumlah di halaman user dimuat ulang
+let userCh = null;
+function subscribeUser() {
+  if (userCh) return;
+  let t;
+  const segarkan = () => { clearTimeout(t); t = setTimeout(() => loadUser(true), 400); };
+  userCh = sb.channel('sidak-admin').on('broadcast', { event: 'berubah' }, segarkan).subscribe();
+  setInterval(() => { if (!document.hidden) loadUser(true); }, 15000);          // cadangan bila koneksi realtime terputus
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) loadUser(true); });   // segarkan saat kembali ke aplikasi
+}
+
 /* ---------- Modal tabel (Lihat) ---------- */
 function viewModal(title, inner, actions = '') {
   const m = $('modal');
@@ -743,20 +755,24 @@ function cetakPendata(id) {
 
 /* ---------- USER ---------- */
 const ua = () => ({ p_hp: S.hp, p_pass: S.pass });
-async function loadUser() {
+async function loadUser(silent) {
   try {
     PROFIL = await rpc('user_profil', ua());
     const p = PROFIL, jk = p.jenis_kelamin === 'L' ? 'Laki-laki' : p.jenis_kelamin === 'P' ? 'Perempuan' : '-';
     $('diri').innerHTML = [['Nama',p.nama],['NIK',p.nik],['Jenis kelamin',jk],['No. HP',p.no_hp],['Alamat',p.alamat],
       ['Kelurahan',p.kelurahan],['Kecamatan',p.kecamatan],['No. TPS',p.no_tps]]
       .map(([k, v]) => `<dt class="text-slate-500">${k}</dt><dd class="col-span-2 font-semibold">${esc(v || '-')}</dd>`).join('');
-    if (!p.nik) ubahDiri(false);
+    if (!p.nik && $('modal').classList.contains('hidden')) ubahDiri(false);
     const s = await rpc('user_ringkasan', ua());
     $('sum').innerHTML = [['Laki-laki',s.laki,'fa-mars','text-blue-700'],['Perempuan',s.perempuan,'fa-venus','text-pink-600'],['Data ganda',s.ganda,'fa-clone','text-red-600']]
       .map(([k, n, ic, c]) => `<div class="rounded-xl bg-slate-50 p-3"><i class="fa-solid ${ic} ${c} text-xl"></i><p class="text-2xl font-extrabold">${n}</p><p class="text-xs text-slate-500">${k}</p></div>`).join('');
     UDATA = await rpc('user_data', ua());
     renderUser();
-  } catch (e) { notif('Sesi tidak valid atau sudah berakhir. Silakan masuk kembali.', 'Sesi berakhir').then(keluar); }
+  } catch (e) {
+    // Pembaruan otomatis: gangguan jaringan diabaikan; hanya sesi yang benar-benar ditolak server yang keluar
+    if (silent && !String(e.message || '').includes('Akses ditolak')) return;
+    notif('Sesi tidak valid atau sudah berakhir. Silakan masuk kembali.', 'Sesi berakhir').then(keluar);
+  }
 }
 function renderUser() {
   const q = ($('cariData').value || '').toLowerCase().trim();
