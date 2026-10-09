@@ -177,7 +177,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_8SOrlhZ__osfT14ZKPmJtg_vy20APAW';
 const LOGO_URL          = 'https://res.cloudinary.com/q7sznixw/image/upload/v1791355406/Logo_SIDAK_Data_Konstituen_i9hub5.webp';
 const HEADER_IMG_URL    = 'https://res.cloudinary.com/q7sznixw/image/upload/v1788749592/6_vbabok.png';
 /* ================================================= */
-  
+
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -603,9 +603,9 @@ function renderPendata() {
     ['Ganda', p => `<span class="${stat(p).ganda ? 'text-red-600 font-bold' : ''}">${stat(p).ganda}</span>`],
     ['Bersih', p => `<span class="text-green-700 font-semibold">${stat(p).bersih}</span>`],
     ['Aksi', p => `<div class="flex flex-col gap-1.5">
-      <button class="ba ba-g" onclick="lihatPendata('${p.id}')">Lihat Data</button>
+      <button class="ba ba-g" onclick="lihatPendata('${p.id}')">Lihat</button>
       <button class="ba ba-y" onclick="resetPw('${p.id}')">Reset Password</button>
-      <button class="ba ba-r" onclick="hapusPendata('${p.id}')">Hapus Pendata</button></div>`]
+      <button class="ba ba-r" onclick="hapusPendata('${p.id}')">Hapus</button></div>`]
   ];
   $('pendataBody').innerHTML = list.length
     ? baris.map(([lb, f]) => `<tr><th>${lb}</th>${list.map((p, i) => `<td>${f(p, i)}</td>`).join('')}</tr>`).join('')
@@ -813,23 +813,45 @@ function cetakUser() { printRows('Data Pendataan - ' + (PROFIL.nama || PROFIL.no
 
 /* ---------- Cetak ---------- */
 function printRows(title, rows, withPendata) {
-  const head = ['No','Nama','NIK','JK','No. HP','Alamat','Kelurahan','Kecamatan','TPS','Hubungan','Potensi'].concat(withPendata ? ['Pendata'] : []).concat(['Ket.']);
-  const body = rows.map((d, i) => `<tr><td>${i+1}</td><td>${esc(d.nama)}</td><td>${esc(d.nik)}</td><td>${d.jenis_kelamin||''}</td>
-    <td>${esc(d.no_hp||'')}</td><td>${esc(d.alamat)}</td><td>${esc(d.kelurahan)}</td><td>${esc(d.kecamatan)}</td>
-    <td>${esc(d.no_tps||'')}</td><td>${esc(d.hubungan || (d.is_diri ? 'Data diri' : '-'))}</td><td>${esc(d.potensi)}</td>${withPendata ? `<td>${esc(d.pendata_nama||'')}</td>` : ''}
-    <td>${d.ganda ? 'Ganda' : ''}</td></tr>`).join('') || `<tr><td colspan="${head.length}" align="center">Tidak ada data</td></tr>`;
+  // Kolom: No, Nama, JK, No. HP, Kecamatan, Kelurahan, TPS, Hubungan, Pendata (admin), Ket.
+  const kol = [
+    ['No', 4, (d, i) => i + 1],
+    ['Nama', 21, d => esc(d.nama)],
+    ['JK', 4, d => d.jenis_kelamin || ''],
+    ['No. HP', 11, d => esc(d.no_hp || '')],
+    ['Kecamatan', 10, d => esc(d.kecamatan)],
+    ['Kelurahan', 11, d => esc(d.kelurahan)],
+    ['TPS', 4, d => esc(d.no_tps || '')],
+    ['Hubungan', 13, d => esc(d.hubungan || (d.is_diri ? 'Data diri' : '-'))]
+  ];
+  if (withPendata) kol.push(['Pendata', 17, d => esc(d.pendata_nama || '')]);
+  kol.push(['Ket.', 5, d => d.ganda ? 'Ganda' : '']);
+  const total = kol.reduce((n, k) => n + k[1], 0);
+  const colgroup = kol.map(k => `<col style="width:${(k[1] / total * 100).toFixed(2)}%">`).join('');
+  const body = rows.map((d, i) => `<tr>${kol.map(k => `<td>${k[2](d, i)}</td>`).join('')}</tr>`).join('')
+    || `<tr><td colspan="${kol.length}" style="text-align:center">Tidak ada data</td></tr>`;
+
+  // Iframe diberi ukuran halaman A4 landscape (di luar layar), BUKAN 0x0, supaya tabel dihitung selebar halaman
   const f = document.createElement('iframe');
-  f.style.cssText = 'position:fixed;width:0;height:0;border:0';
+  f.style.cssText = 'position:fixed;left:-10000px;top:0;width:297mm;height:210mm;border:0;visibility:hidden';
   document.body.appendChild(f);
-  f.contentDocument.write(`<html><head><title>${esc(title)}</title><style>
-    body{font-family:Arial,sans-serif;font-size:11px} h2{margin:0 0 4px} p{margin:0 0 10px;color:#555}
-    table{border-collapse:collapse;width:100%} th,td{border:1px solid #444;padding:4px;text-align:left} th{background:#e5e7eb}
-    @page{size:A4 landscape;margin:12mm}</style></head><body>
+  f.contentDocument.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(title)}</title><style>
+    @page{size:A4 landscape;margin:1.5cm 1cm 1cm 1.5cm}   /* atas, kanan, bawah, kiri */
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{font-family:Arial,sans-serif;font-size:10px;line-height:1.25;color:#000}
+    h2{margin:0 0 3px;font-size:14px} p{margin:0 0 8px;color:#444;font-size:10px}
+    table{width:100%;border-collapse:collapse;table-layout:fixed}
+    th,td{border:1px solid #444;padding:3px 4px;text-align:left;vertical-align:top;overflow-wrap:anywhere}
+    th{background:#e5e7eb}
+    thead{display:table-header-group} tr{page-break-inside:avoid;break-inside:avoid}
+    </style></head><body>
     <h2>${esc(title)}</h2><p>SIDAK - Dicetak ${new Date().toLocaleString('id-ID')} - Total ${rows.length} data</p>
-    <table><thead><tr>${head.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table></body></html>`);
+    <table><colgroup>${colgroup}</colgroup><thead><tr>${kol.map(k => `<th>${k[0]}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table></body></html>`);
   f.contentDocument.close();
-  f.contentWindow.focus(); f.contentWindow.print();
-  setTimeout(() => f.remove(), 2000);
+  const bersih = () => { if (f.parentNode) f.remove(); };
+  f.contentWindow.onafterprint = bersih;
+  setTimeout(() => { f.contentWindow.focus(); f.contentWindow.print(); setTimeout(bersih, 60000); }, 150);
 }
 </script>
 </body>
