@@ -58,13 +58,12 @@
 </div>
 
 <!-- B. LOGIN -->
-<section id="v-login" class="hidden min-h-screen flex items-center justify-center p-4 abstrak">
+<section id="v-login" class="hidden min-h-screen flex flex-col p-4 abstrak">
+  <div class="flex-1 flex items-center justify-center w-full">
   <div class="w-full max-w-sm bg-white/90 backdrop-blur rounded-2xl shadow-xl p-6">
     <img class="js-logo mx-auto mb-5 w-56 max-w-full max-h-56 object-contain" alt="https://res.cloudinary.com/q7sznixw/image/upload/v1791355406/Logo_SIDAK_Data_Konstituen_i9hub5.webp">
     <label class="text-sm font-semibold">Masuk sebagai</label>
-    <select id="role" class="inp mb-3" onchange="setRole()">
-      <option value="">Pilih...</option><option value="admin">Admin</option><option value="user">User</option>
-    </select>
+    <div class="grid grid-cols-2 gap-2 mb-3" role="radiogroup" aria-label="Masuk sebagai"><label class="cursor-pointer"><input type="radio" name="role" value="admin" class="peer sr-only" onchange="setRole()"><span class="flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white py-2.5 font-semibold text-slate-600 hover:bg-slate-50 peer-checked:border-green-700 peer-checked:bg-green-700 peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-green-600"><i class="fa-solid fa-user-shield"></i>Admin</span></label><label class="cursor-pointer"><input type="radio" name="role" value="user" class="peer sr-only" onchange="setRole()"><span class="flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white py-2.5 font-semibold text-slate-600 hover:bg-slate-50 peer-checked:border-green-700 peer-checked:bg-green-700 peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-green-600"><i class="fa-solid fa-user"></i>User</span></label></div>
     <div id="blk-admin" class="hidden mb-3"><label class="text-sm font-semibold">Password</label>
       <div class="relative mb-0"><input id="pAdmin" type="password" class="inp pr-11" autocomplete="current-password"><button type="button" class="absolute right-1 top-1/2 -translate-y-1/2 p-2 text-slate-500 hover:text-slate-800" onclick="toggleEye('pAdmin',this)" aria-label="Lihat password"><i class="fa-regular fa-eye"></i></button></div></div>
     <div id="blk-hp" class="hidden mb-3"><label class="text-sm font-semibold">Nomor Telepon</label>
@@ -78,12 +77,14 @@
     <p id="loginMsg" class="text-sm text-red-600 min-h-[1.25rem] mb-2"></p>
     <button id="btnMasuk" class="btn w-full hidden" onclick="masuk()">Masuk</button>
   </div>
+  </div>
+  <footer class="text-center text-xs text-slate-500 pt-4">Powered by Anto Design Concept &copy; 2026</footer>
 </section>
 
 <!-- C. ADMIN -->
-<section id="v-admin" class="hidden">
+<section id="v-admin" class="hidden min-h-screen flex flex-col">
   <div class="js-header"></div>
-  <main class="max-w-5xl mx-auto p-4 space-y-5">
+  <main class="w-full max-w-5xl mx-auto flex-1 p-4 space-y-5">
     <div id="cards" class="grid grid-cols-6 gap-2 md:gap-3"></div>
     <p id="cardFilter" class="text-xs text-slate-500 -mt-2"></p>
 
@@ -123,12 +124,13 @@
       
     </div>
   </main>
+  <footer class="text-center text-xs text-slate-500 py-6">Powered by Anto Design Concept &copy; 2026</footer>
 </section>
-  
+
 <!-- D. USER -->
-<section id="v-user" class="hidden">
+<section id="v-user" class="hidden min-h-screen flex flex-col">
   <div class="js-header"></div>
-  <main class="max-w-3xl mx-auto p-4 space-y-5">
+  <main class="w-full max-w-3xl mx-auto flex-1 p-4 space-y-5">
     <div class="bg-white rounded-2xl shadow p-4">
       <div class="flex items-center gap-2">
         <button type="button" data-toggle="bodyDiri" class="flex-1 text-left font-bold" onclick="toggleSeksi('bodyDiri',this)" aria-expanded="false"><i class="fa-solid fa-id-card text-blue-700 mr-2"></i>Data Diri</button>
@@ -161,8 +163,9 @@
     </div>
 
   </main>
+  <footer class="text-center text-xs text-slate-500 py-6">Powered by Anto Design Concept &copy; 2026</footer>
 </section>
-  
+
 <!-- MODAL -->
 <div id="modal" class="hidden fixed inset-0 z-40 bg-black/50 items-center justify-center p-4"></div>
 <div id="confirm" class="hidden fixed inset-0 z-[60] bg-black/60 items-center justify-center p-4"></div>
@@ -227,7 +230,7 @@ let step = '';
 const msg = t => $('loginMsg').textContent = t;
 function setRole() {
   ['admin','hp','pass','reg'].forEach(b => $('blk-'+b).classList.add('hidden'));
-  const r = $('role').value; msg('');
+  const r = (document.querySelector('input[name="role"]:checked') || {}).value || ''; msg('');
   step = r === 'admin' ? 'admin' : r === 'user' ? 'hp' : '';
   if (r === 'admin') $('blk-admin').classList.remove('hidden');
   if (r === 'user') $('blk-hp').classList.remove('hidden');
