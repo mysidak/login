@@ -813,45 +813,23 @@ function cetakUser() { printRows('Data Pendataan - ' + (PROFIL.nama || PROFIL.no
 
 /* ---------- Cetak ---------- */
 function printRows(title, rows, withPendata) {
-  // Kolom: No, Nama, JK, No. HP, Kecamatan, Kelurahan, TPS, Hubungan, Pendata (admin), Ket.
-  const kol = [
-    ['No', 4, (d, i) => i + 1],
-    ['Nama', 21, d => esc(d.nama)],
-    ['JK', 4, d => d.jenis_kelamin || ''],
-    ['No. HP', 11, d => esc(d.no_hp || '')],
-    ['Kecamatan', 10, d => esc(d.kecamatan)],
-    ['Kelurahan', 11, d => esc(d.kelurahan)],
-    ['TPS', 4, d => esc(d.no_tps || '')],
-    ['Hubungan', 13, d => esc(d.hubungan || (d.is_diri ? 'Data diri' : '-'))]
-  ];
-  if (withPendata) kol.push(['Pendata', 17, d => esc(d.pendata_nama || '')]);
-  kol.push(['Ket.', 5, d => d.ganda ? 'Ganda' : '']);
-  const total = kol.reduce((n, k) => n + k[1], 0);
-  const colgroup = kol.map(k => `<col style="width:${(k[1] / total * 100).toFixed(2)}%">`).join('');
-  const body = rows.map((d, i) => `<tr>${kol.map(k => `<td>${k[2](d, i)}</td>`).join('')}</tr>`).join('')
-    || `<tr><td colspan="${kol.length}" style="text-align:center">Tidak ada data</td></tr>`;
-
-  // Iframe diberi ukuran halaman A4 landscape (di luar layar), BUKAN 0x0, supaya tabel dihitung selebar halaman
+  const head = ['No','Nama','JK','No. HP','Kecamatan','Kelurahan','TPS','Hubungan'].concat(withPendata ? ['Pendata'] : []).concat(['Ket.']);
+  const body = rows.map((d, i) => `<tr><td>${i+1}</td><td>${esc(d.nama)}</td><td>${d.jenis_kelamin||''}</td>
+    <td>${esc(d.no_hp||'')}</td><td>${esc(d.kecamatan)}</td><td>${esc(d.kelurahan)}</td>
+    <td>${esc(d.no_tps||'')}</td><td>${esc(d.hubungan || (d.is_diri ? 'Data diri' : '-'))}</td>${withPendata ? `<td>${esc(d.pendata_nama||'')}</td>` : ''}
+    <td>${d.ganda ? 'Ganda' : ''}</td></tr>`).join('') || `<tr><td colspan="${head.length}" align="center">Tidak ada data</td></tr>`;
   const f = document.createElement('iframe');
-  f.style.cssText = 'position:fixed;left:-10000px;top:0;width:297mm;height:210mm;border:0;visibility:hidden';
+  f.style.cssText = 'position:fixed;left:-10000px;top:0;width:297mm;height:210mm;border:0';
   document.body.appendChild(f);
-  f.contentDocument.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(title)}</title><style>
-    @page{size:A4 landscape;margin:1.5cm 1cm 1cm 1.5cm}   /* atas, kanan, bawah, kiri */
-    *{box-sizing:border-box}
-    html,body{margin:0;padding:0}
-    body{font-family:Arial,sans-serif;font-size:10px;line-height:1.25;color:#000}
-    h2{margin:0 0 3px;font-size:14px} p{margin:0 0 8px;color:#444;font-size:10px}
-    table{width:100%;border-collapse:collapse;table-layout:fixed}
-    th,td{border:1px solid #444;padding:3px 4px;text-align:left;vertical-align:top;overflow-wrap:anywhere}
-    th{background:#e5e7eb}
-    thead{display:table-header-group} tr{page-break-inside:avoid;break-inside:avoid}
-    </style></head><body>
+  f.contentDocument.write(`<html><head><title>${esc(title)}</title><style>
+    body{margin:0;font-family:Arial,sans-serif;font-size:11px} h2{margin:0 0 4px} p{margin:0 0 10px;color:#555}
+    table{border-collapse:collapse;width:100%} th,td{border:1px solid #444;padding:4px;text-align:left} th{background:#e5e7eb}
+    @page{size:A4 landscape;margin:1.5cm 1cm 1cm 1.5cm}</style></head><body>
     <h2>${esc(title)}</h2><p>SIDAK - Dicetak ${new Date().toLocaleString('id-ID')} - Total ${rows.length} data</p>
-    <table><colgroup>${colgroup}</colgroup><thead><tr>${kol.map(k => `<th>${k[0]}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table></body></html>`);
+    <table><thead><tr>${head.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table></body></html>`);
   f.contentDocument.close();
-  const bersih = () => { if (f.parentNode) f.remove(); };
-  f.contentWindow.onafterprint = bersih;
-  setTimeout(() => { f.contentWindow.focus(); f.contentWindow.print(); setTimeout(bersih, 60000); }, 150);
+  f.contentWindow.focus(); f.contentWindow.print();
+  setTimeout(() => f.remove(), 2000);
 }
 </script>
 </body>
