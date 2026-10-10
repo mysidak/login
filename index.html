@@ -603,9 +603,9 @@ function renderPendata() {
     ['Ganda', p => `<span class="${stat(p).ganda ? 'text-red-600 font-bold' : ''}">${stat(p).ganda}</span>`],
     ['Bersih', p => `<span class="text-green-700 font-semibold">${stat(p).bersih}</span>`],
     ['Aksi', p => `<div class="flex flex-col gap-1.5">
-      <button class="ba ba-g" onclick="lihatPendata('${p.id}')">Lihat</button>
+      <button class="ba ba-g" onclick="lihatPendata('${p.id}')">Lihat Data</button>
       <button class="ba ba-y" onclick="resetPw('${p.id}')">Reset Password</button>
-      <button class="ba ba-r" onclick="hapusPendata('${p.id}')">Hapus</button></div>`]
+      <button class="ba ba-r" onclick="hapusPendata('${p.id}')">Hapus Pendata</button></div>`]
   ];
   $('pendataBody').innerHTML = list.length
     ? baris.map(([lb, f]) => `<tr><th>${lb}</th>${list.map((p, i) => `<td>${f(p, i)}</td>`).join('')}</tr>`).join('')
@@ -680,7 +680,7 @@ async function hapusGanda(id) {
   const d = ADATA.find(x => x.id === id); if (!d) return;
   const ok = await konfirmasi({ judul: 'Hapus data ganda?', tipe: 'bahaya', tombol: 'Ya, hapus',
     pesan: 'Data "' + d.nama + '" (NIK ' + d.nik + ') dari ' + (d.pendata_nama || 'pendata') + ' akan dihapus permanen dan tidak bisa dikembalikan.'
-      + (d.unggul ? ' Perhatian: data ini memiliki prioritas lebih baik dari data ganda lainnya, hapus hanya bila memang keliru.' : '') });
+      + (d.unggul ? ' Perhatian: data ini memiliki potensi lebih baik dari data ganda lainnya, hapus hanya bila memang keliru.' : '') });
   if (!ok) return;
   try { await rpc('admin_data_hapus', { p_pass: S.pass, p_id: id }); await loadAdmin(true); toast('Data berhasil dihapus'); }
   catch (e) { notif(e.message, 'Gagal menghapus data'); }
@@ -795,7 +795,7 @@ function renderUser() {
 function ubahDiri(closable = true) {
   openForm({
     title: closable ? 'Ubah Data Diri' : 'Lengkapi Data Diri', closable, cari: true,
-    catatan: 'Cukup masukkan NIK Anda. Nama, alamat, kelurahan, kecamatan, dan TPS terisi otomatis dari data master.',
+    catatan: 'Masukkan NIK Anda untuk verifikasi data.',
     keys: ['nik'], vals: PROFIL,
     onSave: async o => { await rpc('user_simpan_diri', { ...ua(), p: o }); loadUser(); }
   });
@@ -804,7 +804,7 @@ function formData(i) {
   const d = i === undefined ? null : UDATA[i];
   openForm({
     title: d ? 'Ubah Data' : 'Tambah Data', vals: d || {}, dua: !d, cari: true,
-    catatan: 'Masukkan NIK. Nama, alamat, kelurahan, kecamatan, dan TPS terisi otomatis dari data master.',
+    catatan: 'Masukkan NIK untuk verifikasi data.',
     keys: ['nik','no_hp','hubungan'],
     onSave: async o => { await rpc('user_simpan_data', { ...ua(), p_id: d ? d.id : null, p: o }); loadUser(); }
   });
