@@ -804,7 +804,7 @@ function formData(i) {
   const d = i === undefined ? null : UDATA[i];
   openForm({
     title: d ? 'Ubah Data' : 'Tambah Data', vals: d || {}, dua: !d, cari: true,
-    catatan: 'Inpit data konstituen.',
+    catatan: 'Penginputan Data Konstituen.',
     keys: ['nik','no_hp','hubungan'],
     onSave: async o => { await rpc('user_simpan_data', { ...ua(), p_id: d ? d.id : null, p: o }); loadUser(); }
   });
