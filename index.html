@@ -713,7 +713,7 @@ function viewModal(title, inner, actions = '') {
   const m = $('modal');
   m.innerHTML = `<div class="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
     <div class="flex justify-between items-center p-4 border-b"><h3 class="font-bold">${esc(title)}</h3>
-      <button id="mx" class="text-slate-500 text-4xl">&times;</button></div>
+      <button id="mx" class="text-slate-500 text-xl">&times;</button></div>
     <div class="p-4 overflow-auto">${inner}</div>
     <div class="p-4 border-t flex gap-2 justify-end">${actions}<button class="btn bg-slate-500 hover:bg-slate-600" onclick="closeForm()">Tutup</button></div></div>`;
   m.classList.remove('hidden'); m.classList.add('flex');
