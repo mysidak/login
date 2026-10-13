@@ -256,9 +256,11 @@ async function masuk() {
       b.textContent = step === 'pass' ? 'Masuk' : 'Simpan & Masuk';
     } else if (step === 'pass') {
       const hp = $('hp').value.trim(), p = $('pUser').value;
+      if (!p) { $('pUser').focus(); return msg('Masukkan password terlebih dahulu.'); }
       (await rpc('login_user', { p_hp: hp, p_pass: p })) ? start({ role:'user', hp, pass:p }) : msg('Password salah.');
     } else if (step === 'reg') {
       const hp = $('hp').value.trim(), p = $('pReg1').value;
+      if (!p) { $('pReg1').focus(); return msg('Masukkan password terlebih dahulu.'); }
       if (p.length < 6) return msg('Password minimal 6 karakter.');
       if (p !== $('pReg2').value) return msg('Password tidak sama.');
       (await rpc('registrasi_user', { p_hp: hp, p_pass: p })) ? start({ role:'user', hp, pass:p }) : msg('Registrasi gagal. Coba masuk ulang.');
